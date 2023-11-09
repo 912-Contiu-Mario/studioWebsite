@@ -1,8 +1,10 @@
 package com.example.Model;
 
+import java.util.UUID;
+
 public class User {
-    private String username;
-    private String pass;
+    private final String username;
+    private final String pass;
 
     public User(String username, String password) {
         this.username = username;
@@ -17,9 +19,19 @@ public class User {
         return pass;
     }
 
+
     @Override
     public String toString() {
         return "Username: " + username +
                 "\nPassword: " + pass;
+    }
+
+    @Override
+    public boolean equals(Object userToCompare) {
+        if (userToCompare instanceof User user)
+        {
+            return this.username.equals(user.getUsername()) && this.pass.equals(user.getPass());
+        }
+        return false;
     }
 }

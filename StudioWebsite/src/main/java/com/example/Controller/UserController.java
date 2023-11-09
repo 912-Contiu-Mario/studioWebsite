@@ -2,36 +2,56 @@ package com.example.Controller;
 
 import com.example.Model.User;
 import com.example.Service.UserService;
-import jdk.jfr.ContentType;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
-@RestController
-@CrossOrigin
+import java.io.StringBufferInputStream;
+import java.util.UUID;
 
-@RequestMapping()
+
+@Controller
 public class UserController {
-    //private UserService service;
+    private UserService uService;
 
-    @Autowired
-    private final JdbcTemplate query = new JdbcTemplate();
+    private String connectionToken;
+
+    public UserController(UserService service) {
+        this.uService = service;
+    }
+
+    @RequestMapping("/")
+    public String welcome() {
+        String token = UUID.randomUUID().toString();
+
+        return "login";
+    }
+
+    @RequestMapping("/adminPanel")
+    public String adminPanel() {
+        if (connectionToken == null)
+            return "noAccess";
+        else
+        {
+            return "adminPanel";
+        }
+    }
 
     @PostMapping
-    public void logIn(@RequestBody User user)
+    public ResponseEntity<String> logIn(@RequestBody User userToLogin)
     {
-        System.out.println(user);
-
-        String sql = "SELECT * FROM Users WHERE username='" + user.getUsername() + "' AND password='" + user.getPass()+"'";
-        try
-        {
-            Map<String, Object> res = query.queryForMap(sql);
-            System.out.println("Login succesfull!");
+        boolean isValidUser = uService.verifyLogin(userToLogin);
+        if (isValidUser) {
+            String uniqueID = UUID.randomUUID().toString();
+            System.out.println(uniqueID);
+            connectionToken = uniqueID;
+            return new ResponseEntity<>(connectionToken, HttpStatus.OK);
         }
-        catch (Exception e)
-        {
-            System.out.println("Invalid username or password!");
+        else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
         }
     }
 }
