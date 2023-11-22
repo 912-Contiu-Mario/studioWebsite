@@ -1,37 +1,39 @@
 package com.example.Model;
 
-import java.util.UUID;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jdk.jfr.DataAmount;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
+import java.util.Date;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
-    private final String username;
-    private final String pass;
+
+    @Id
+    @Column(name = "username")
+    private String username;
+
+
+    @Column(name = "password")
+    private String password;
+
+
+    @Column(name = "role")
+    private String role;
 
     public User(String username, String password) {
         this.username = username;
-        this.pass = password;
-    }
+        this.password = password;
 
-    public String getUsername(){
-        return username;
-    }
-    public String getPass()
-    {
-        return pass;
-    }
-
-
-    @Override
-    public String toString() {
-        return "Username: " + username +
-                "\nPassword: " + pass;
-    }
-
-    @Override
-    public boolean equals(Object userToCompare) {
-        if (userToCompare instanceof User user)
-        {
-            return this.username.equals(user.getUsername()) && this.pass.equals(user.getPass());
-        }
-        return false;
     }
 }

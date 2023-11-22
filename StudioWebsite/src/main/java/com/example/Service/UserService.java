@@ -1,22 +1,25 @@
 package com.example.Service;
 
 import com.example.Model.User;
-import com.example.Repository.userRepo;
+import com.example.Repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+//
 @Service
 public class UserService {
-    private final userRepo uRepo;
-    UserService(userRepo ur){
-        uRepo = ur;
+    @Autowired
+    private UserRepository userRepository;
+    public User getUserByUsername(String username)
+    {
+        return userRepository.findUserByUsername(username);
     }
 
-    public Boolean verifyLogin(User userToVerify){
-        for (User user : uRepo.getUsers())
-        {
-            if (userToVerify.equals(user))
-                return true;
-        }
-        return false;
+    public User createUser(User user)
+    {
+        User newUser = userRepository.save(user);
+        userRepository.flush();
+        return newUser;
+
     }
+
 }
