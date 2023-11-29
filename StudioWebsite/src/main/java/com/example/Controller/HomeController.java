@@ -31,8 +31,11 @@ public class HomeController {
     @RequestMapping(value = "")
     public String index()
     {
-        return "adminPanel";
+        return "index";
     }
+
+    @RequestMapping(value = "adminPanel")
+    public String adminPanel() {return "adminPanel";}
 
 
     @RequestMapping(value = "/register",method = RequestMethod.GET)
