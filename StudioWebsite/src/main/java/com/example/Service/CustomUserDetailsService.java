@@ -21,11 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUsername(username);
-
-
         if(user == null)
             throw new UsernameNotFoundException("Incorrect credentials!");
-        List<String> roles = Arrays.asList(user.getRole());
+
         UserDetails userDetails =
                 org.springframework.security.core.userdetails.User.builder()
                         .username(user.getUsername())

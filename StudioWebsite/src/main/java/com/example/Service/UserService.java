@@ -5,7 +5,6 @@ import com.example.Model.User;
 import com.example.Model.UsernameException;
 import com.example.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
@@ -21,7 +20,7 @@ public class UserService {
         return userRepository.findUserByUsername(username);
     }
 
-    public User createUser(User user)
+    public User saveUser(User user)
     {
         User newUser = userRepository.save(user);
         userRepository.flush();
@@ -30,21 +29,19 @@ public class UserService {
 
 
     public void validateUsername(String username) throws UsernameException {
-        Pattern pattern = Pattern.compile("^[A-Za-z0-9]{3,30}$");
-        Matcher matcher = pattern.matcher(username);
-        boolean validity = matcher.find();
+        Pattern usernamePattern = Pattern.compile("^[A-Za-z0-9]{3,30}$");
+        Matcher usernameValidator = usernamePattern.matcher(username);
+        boolean validity = usernameValidator.find();
         if(!validity)
-            throw new UsernameException("Invalid username(only use letters and digits");
+            throw new UsernameException("Invalid username(only use letters and digits)");
         if( userRepository.findUserByUsername(username) != null)
             throw new UsernameException("Username taken");
     }
     public void validatePassword(String password) throws PasswordException
     {
-        if(password.length()<8)
-            throw new PasswordException("Invalid password. See rules above");
-        Pattern pattern = Pattern.compile("(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}");
-        Matcher matcher = pattern.matcher(password);
-        boolean validity = matcher.find();
+        Pattern passwordPattern = Pattern.compile("(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}");
+        Matcher passwordValidator = passwordPattern.matcher(password);
+        boolean validity = passwordValidator.find();
         if(!validity)
             throw new PasswordException("Invalid password. See rules above");
     }

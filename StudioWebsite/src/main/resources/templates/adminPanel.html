@@ -5,14 +5,39 @@
     <title>Title</title>
 </head>
 <body>
-    <h1>THIS IS THE ADMIN PANEL</h1>
-    <br>
-    <h1>YOU LOGGED IN WITH SUCCES!</h1>
-    <button onclick="createUser()">Create new user</button>
-    <script>
-        function createUser() {
-            window.location.href = '/register';
+<h1>THIS IS THE ADMIN PANEL</h1>
+<h1>Image Upload</h1>
+
+<div>
+    <form id="uploadForm">
+        <label for="image">Choose an image:</label>
+        <input type="file" id="image" name="image" accept="image/*" onchange="previewImage()">
+        <br>
+        <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
+        <br>
+        <input type="submit" value="Upload">
+    </form>
+</div>
+<button onclick="createUser()">Create new user</button>
+<script>
+    function previewImage() {
+        const fileInput = document.getElementById('image');
+        const imagePreview = document.getElementById('imagePreview');
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            imagePreview.src = '#';
+            imagePreview.style.display = 'none';
         }
-    </script>
+    }
+</script>
 </body>
 </html>

@@ -1,35 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+
+<script>
+    function validateUsername(username) {
+        // Define the regex pattern for a valid username
+        // The pattern below allows alphanumeric characters
+        // It requires at least 3 characters and can be up to 20 characters long
+        const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
+
+        // Test the provided username against the regex pattern
+        return usernameRegex.test(username);
+    }
+
+    function validatePassword(password) {
+        // Define the regex pattern for a valid password
+        // The pattern requires at least one uppercase letter, one lowercase letter, one digit, and a minimum length of 8 characters
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+
+        // Test the provided password against the regex pattern
+        return passwordRegex.test(password);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission behavior
+
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+
+            let csrfToken = document.querySelector('meta[name="_csrf"]').content;
+
+            if (!validateUsername(username)) {
+                document.getElementById('userOrPassError').innerHTML="Invalid username. Make sure your \
+                username only contains alphanumeric characters and has at least 3 characters!"
+            } else if (!validatePassword(password)) {
+                document.getElementById('userOrPassError').innerHTML="Invalid password. Make sure your \
+                password contains at least one uppercase letter, at least one lowercase letter, at least \
+                one digit and has at least 8 characters!"
+            } else {
+                fetch('http://localhost:8080/register', {
+                    method: 'POST',
+                    redirect: 'follow',
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: "USER"
+                    }),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8',
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                })
+                    .then(function (response) {
+                        window.location.href = response.url;
+                    })
+                    .then(function (data) {
+                        console.log(data);
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        })
+    });
+</script>
 
 <head>
     <title>Sign Up</title>
 </head>
 <body>
-<h1>Sign Up</h1>
-<p th:if="${param.error}" class="error">Registration failed</p>
+<h1>Create a new account</h1>
+<p th:if="${param.error}" class="error">Registration failed. Unknown error. Contact Darius si Mario</p>
+<p id="userOrPassError"></p>
 <p th:if="${param.success}" class="error">Registration successful</p>
 
-<form th:action="@{/register}" method="post" th:object="${user}">
-    <label for="username">Email </label>:
-    <input type="text" id="username"  th:field="*{username}" /> <br />
+<form id="loginForm">
+    <label for="username">Username </label>:
+    <input type="text" id="username"/> <br/>
+
     <label for="password">Password </label>:
-    <input type="password" id="password" th:field="*{password}"/> <br />
-    <input type="submit" value="Sign Up" /> <br />
+    <input type="password" id="password"/> <br/>
+
+    <input type="submit" value="Sign Up"/> <br/>
 </form>
-<p th:if="${param.passError}" class="error">Invalid password, check rules below</p>
-<h1>Password Requirements</h1>
-
-<p>Please create a password that meets the following requirements:</p>
-
-<ul class="requirements">
-    <li>At least 8 characters long</li>
-    <li>Must start with a capital letter</li>
-    <li>Must contain at least 1 non-capital letter</li>
-    <li>Must contain at least 1 digit</li>
-</ul>
-
-
-<p>Already have an account? </p> <br/>
+<br><br><br>
 <a href="/login">Login</a>
 </body>
 </html>
