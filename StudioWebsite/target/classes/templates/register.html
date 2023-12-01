@@ -7,6 +7,8 @@
 <body>
 <h1>Sign Up</h1>
 <p th:if="${param.error}" class="error">Registration failed</p>
+<p th:if="${param.success}" class="error">Registration successful</p>
+
 <form th:action="@{/register}" method="post" th:object="${user}">
     <label for="username">Email </label>:
     <input type="text" id="username"  th:field="*{username}" /> <br />
@@ -14,6 +16,18 @@
     <input type="password" id="password" th:field="*{password}"/> <br />
     <input type="submit" value="Sign Up" /> <br />
 </form>
+<p th:if="${param.passError}" class="error">Invalid password, check rules below</p>
+<h1>Password Requirements</h1>
+
+<p>Please create a password that meets the following requirements:</p>
+
+<ul class="requirements">
+    <li>At least 8 characters long</li>
+    <li>Must start with a capital letter</li>
+    <li>Must contain at least 1 non-capital letter</li>
+    <li>Must contain at least 1 digit</li>
+</ul>
+
 
 <p>Already have an account? </p> <br/>
 <a href="/login">Login</a>

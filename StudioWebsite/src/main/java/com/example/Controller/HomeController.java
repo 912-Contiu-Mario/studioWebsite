@@ -1,5 +1,7 @@
 package com.example.Controller;
+import com.example.Model.PasswordException;
 import com.example.Model.User;
+import com.example.Model.UsernameException;
 import com.example.Service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,44 +31,56 @@ public class HomeController {
         this.authenticationManager = authenticationManager;
     }
 
-    @RequestMapping(value = "")
-    public String index()
+    @RequestMapping(value = "adminPanel")
+    public String adminPanel()
     {
-        return "index";
+        return "adminPanel";
     }
 
-    @RequestMapping(value = "adminPanel")
-    public String adminPanel() {return "adminPanel";}
 
+    @RequestMapping(value = "")
+    public String index(){return "index";}
 
     @RequestMapping(value = "/register",method = RequestMethod.GET)
-    public String register(HttpServletRequest request, HttpServletResponse response, Model model){
+    public String register( HttpServletRequest request, HttpServletResponse response, Model model){
         User user = new User();
         model.addAttribute("user",user);
         return "register";
     }
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public String register(HttpServletRequest request, HttpServletResponse response, @ModelAttribute("user")User user)
+    public String register(HttpServletRequest request, HttpServletResponse response, @ModelAttribute("user")User user, Model model)
     {
         try{
             user.setRole("USER");
+            String password = user.getPassword();
+            userService.validatePassword(password);
+            userService.validateUsername(user.getUsername());
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(10);
+            String encodedPassword = encoder.encode(password);
+            user.setPassword(encodedPassword);
             User newUser = userService.createUser(user);
             if(newUser == null){
                 return "redirect:/register?error";
             }
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
-            SecurityContext securityContext = SecurityContextHolder.getContext();
-            securityContext.setAuthentication(authentication);
-            HttpSession session = request.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
-            return "redirect:/";
-        } catch (Exception e){
+//            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
+//            SecurityContext securityContext = SecurityContextHolder.getContext();
+//            securityContext.setAuthentication(authentication);
+//            HttpSession session = request.getSession(true);
+//            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+            return "redirect:/register?success";
+        }
+        catch(UsernameException usernameException){
+            return "redirect:/register";
+        }
+        catch(PasswordException passwordException){
+
+            return "redirect:/register?passError";
+        }
+        catch (Exception e){
             return "redirect:/register?error";
         }
-        }
-
-
+    }
 
 
 }

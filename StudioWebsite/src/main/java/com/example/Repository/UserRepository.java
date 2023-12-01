@@ -17,7 +17,4 @@ public interface UserRepository extends JpaRepository<User,String> {
     @Transactional
     @Query(value = "INSERT INTO USER VALUES " + "( " + ":#{#user.username} +:#{#user.password}+:#{#user.role}" + ")", nativeQuery = true)
     public abstract void insert(@Param("user") User user);
-
-
-
 }
