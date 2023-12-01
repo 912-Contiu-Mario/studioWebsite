@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -16,6 +18,12 @@
         <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
         <br>
         <input type="submit" value="Upload">
+    </form>
+
+
+    <form id="fileUploadForm">
+        <input type="file" name="file" id="fileInput" />
+        <button type="button" onclick="uploadFile()">Upload File</button>
     </form>
 </div>
 <button onclick="createUser()">Create new user</button>
@@ -37,6 +45,30 @@
             imagePreview.src = '#';
             imagePreview.style.display = 'none';
         }
+    }
+
+    let csrfToken = document.querySelector('meta[name="_csrf"]').content;
+
+    function uploadFile()
+    {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if(file)
+        {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://localhost:8080/adminPanel?upload',{
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            })
+
+        }
+
     }
 </script>
 </body>
