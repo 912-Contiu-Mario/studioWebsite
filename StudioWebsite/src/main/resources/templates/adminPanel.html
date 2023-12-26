@@ -2,44 +2,224 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<title>Admin Panel</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+
+    .container {
+        display: flex;
+        height: 100vh;
+    }
+
+    #section1 {
+        width: 80%;
+        flex: 1;
+        padding: 20px;
+        background-color: #fff;
+        border-right: 1px solid #ccc;
+        box-sizing: border-box;
+        overflow-y: auto; /* Enable scrolling if content exceeds container height */
+    }
+
+    .album-container {
+        display: flex;
+        flex-direction: column;
+        width: 40%;
+        min-width: 200px;
+        margin-right: 20px;
+    }
+
+    .album-section {
+        margin-bottom: 10px;
+    }
+
+    .album {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .album:hover {
+        background-color: #f0f0f0;
+    }
+
+    .image-container {
+        display: flex;
+        flex-wrap: wrap;
+        width: 60%;
+        overflow-y: auto; /* Enable scrolling if content exceeds container height */
+        justify-content: flex-start; /* Left-justify the items */
+        align-items: flex-start; /* Top-align the items */
+        align-content: flex-start; /* Top-align the items */
+        gap: 5px;
+    }
+
+    .image-item {
+        width: 100px; /* Set the desired width of each image tile */
+        height: 100px; /* Set the desired height of each image tile */
+        margin: 5px; /* Add a small margin between images */
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+
+    #section2 {
+        width: 20%;
+        flex: 1;
+        padding: 20px;
+        background-color: #fff;
+        box-sizing: border-box;
+        overflow-y: auto; /* Enable scrolling if content exceeds container height */
+    }
+
+    form {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    button {
+        padding: 8px 12px;
+        background-color: #007BFF;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
 </head>
 <body>
-<h1>THIS IS THE ADMIN PANEL</h1>
-<h1>Image Upload</h1>
-
-<div>
-    <form id="uploadForm">
-        <label for="image">Choose an image:</label>
-        <input type="file" id="image" name="image" accept="image/*" onchange="previewImage()">
-        <br>
-        <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
-        <br>
-        <input type="submit" value="Upload">
-    </form>
-
-
-    <form id="fileUploadForm">
-        <input type="file" name="file" id="fileInput" />
-        <button type="button" onclick="uploadFile()">Upload File</button>
-    </form>
+<div style="text-align: center;"> <h1>ADMIN PANEL</h1></div>
+<div class="container">
+    <div class="section" id="section1">
+        <div id="albumFormContainer">
+            <!-- You can add any form related to albums here if needed -->
+        </div>
+        <div id="albumContainer" class="album-container">
+            <!-- Albums will be dynamically added here from the server -->
+        </div>
+    </div>
+    <div class="image-container" id="imageContainer">
+        <!-- Images will be dynamically added here from the server -->
+    </div>
+    <div class="section" id="section2">
+        <form id="albumForm" onsubmit="createAlbum()">
+            <label for="albumTitle">Title:</label>
+            <input type="text" id="albumTitle" required />
+            <br />
+            <button type="submit">Create Album</button>
+        </form>
+        <button onclick="createUser()">Create new user</button>
+        <br /><br />
+        <form id="fileUploadForm">
+            <input type="file" name="file" id="fileInput" />
+            <button type="button" onclick="uploadFile()">Upload File</button>
+        </form>
+    </div>
 </div>
-<button onclick="createUser()">Create new user</button>
+
 <script>
+    // You can add your JavaScript code here
+</script>
+<!--<div>-->
+<!--    <form id="uploadForm">-->
+<!--        <label for="image">Choose an image:</label>-->
+<!--        <input type="file" id="image" name="image" accept="image/*" onchange="previewImage()">-->
+<!--        <br>-->
+<!--        <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">-->
+<!--        <br>-->
+<!--        <input type="submit" value="Upload">-->
+<!--    </form>-->
+
+
+<script>
+    let currentUrl = "http://192.168.1.102:8080/";
+    let currentAlbum = '';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add an event listener to the "Create Album" button
+        // Load existing albums on page load
+        loadAlbums();
+    });
+
+    function displayAlbumData(album)
+    {
+        let url = currentUrl + 'adminPanel/album?id=' + album.album_title;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayContent(data);
+            })
+            .catch(error => alert("Error fetching album data"));
+    }
+    function loadAlbums(){
+        var albumContainer = document.getElementById('albumContainer');
+        fetch('/adminPanel?getAlbums')
+            .then(response => response.json())
+            .then(albums=>{
+                albumContainer.innerHTML = '';
+                albums.forEach(album => {
+                    let albumDiv = document.createElement('div');
+                    albumDiv.classList.add('album');
+                    albumDiv.addEventListener('click', function() {
+                        // Handle the click event (e.g., navigate to a detailed view)
+                        currentAlbum = album;
+                        displayAlbumData(currentAlbum);
+                    });
+
+                    let titleElement = document.createElement('strong');
+                    titleElement.textContent = album.album_title + " ";
+                    albumDiv.appendChild(titleElement)
+
+                    let usernameElement = document.createElement('strong');
+                    usernameElement.textContent = album.username + " ";
+                    albumDiv.appendChild(usernameElement)
+
+                    let creationDateElement = document.createElement('strong');
+                    creationDateElement.textContent = album.creation_date;
+                    albumDiv.appendChild(creationDateElement)
+                    albumContainer.appendChild(albumDiv);
+                });
+            })
+    }
     function previewImage() {
         const fileInput = document.getElementById('image');
         const imagePreview = document.getElementById('imagePreview');
 
         if (fileInput.files && fileInput.files[0]) {
             const reader = new FileReader();
-
             reader.onload = function (e) {
                 imagePreview.src = e.target.result;
                 imagePreview.style.display = 'block';
             };
-
             reader.readAsDataURL(fileInput.files[0]);
         } else {
             imagePreview.src = '#';
@@ -53,23 +233,83 @@
     {
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
-
         if(file)
         {
             const formData = new FormData();
             formData.append('file', file);
-
-            fetch('http://localhost:8080/adminPanel?upload',{
+            formData.append('albumName', currentAlbum.album_title);
+            fetch(currentUrl + 'adminPanel?upload',{
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
                 }
+            }).then(response => {
+                if(!response.ok){
+                    alert("Couldn't upload file")
+                }
+                else{
+                    displayAlbumData(currentAlbum);
+                }
             })
-
         }
-
     }
+
+    function createAlbum()
+    {
+        let albumTitle = document.getElementById('albumTitle').value;
+        if(albumTitle) {
+            fetch(currentUrl+ 'adminPanel?createAlbum', {
+                method: 'POST',
+                body: JSON.stringify({
+                    album_title: albumTitle,
+                    username: 'root'
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            })
+                .then(function (response) {
+                    window.location.href = response.url;
+                })
+        }
+    }
+
+    function displayContent(contents) {
+        const container = document.getElementById('imageContainer');
+        container.innerHTML = '';
+        contents.forEach(content => {
+            if (content.fileType === 'image') {
+
+                const imageItem = document.createElement('div');
+
+                imageItem.classList.add('image-item');
+
+                const imgElement = document.createElement('img');
+                imgElement.src = currentUrl+'adminPanel/content?id=' + content.fileName;
+
+                // Append the image element to the image item
+                imageItem.appendChild(imgElement);
+
+                // Append the image item to the container
+                container.appendChild(imageItem);
+            } else if (content.fileType === 'video') {
+                const videoItem = document.createElement('div');
+                videoItem.classList.add('image-item');
+
+                const videoElement = document.createElement('video');
+                videoElement.src = currentUrl + 'adminPanel/content/' + content.fileName;
+
+                // Append the video element to the video item
+                videoItem.appendChild(videoElement);
+
+                // Append the video item to the container
+                container.appendChild(videoItem);
+            }
+        });
+    }
+
 </script>
 </body>
 </html>

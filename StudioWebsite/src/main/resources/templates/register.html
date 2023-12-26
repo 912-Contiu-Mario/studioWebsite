@@ -3,6 +3,7 @@
 <meta name="_csrf" th:content="${_csrf.token}"/>
 
 <script>
+    let currentUrl = "http://192.168.1.102:8080/";
     function validateUsername(username) {
         // Define the regex pattern for a valid username
         // The pattern below allows alphanumeric characters
@@ -39,7 +40,7 @@
                 password contains at least one uppercase letter, at least one lowercase letter, at least \
                 one digit and has at least 8 characters!"
             } else {
-                fetch('http://localhost:8080/register', {
+                fetch(currentUrl+'register', {
                     method: 'POST',
                     redirect: 'follow',
                     body: JSON.stringify({

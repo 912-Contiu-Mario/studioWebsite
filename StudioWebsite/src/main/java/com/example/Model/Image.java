@@ -13,7 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="Images")
-public class Image {
+public class Image implements Content{
     @Id
     @Column(name = "image_id")
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -36,5 +36,25 @@ public class Image {
         this.album_id = album_id;
         this.image_name = image_name;
         this.image_path = image_path;
+    }
+    @Override
+    public String getFileType()
+    {
+        return "image";
+    }
+    @Override
+    public String getPath()
+    {
+        return this.image_path;
+    }
+    @Override
+    public Date getUploadDate()
+    {
+        return this.upload_date;
+    }
+
+    @Override
+    public String getFileName() {
+        return image_name;
     }
 }
