@@ -2,6 +2,7 @@ package com.example.Controller;
 import com.example.Model.*;
 import com.example.Service.FileService;
 import com.example.Service.UserService;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -57,26 +58,39 @@ public class HomeController {
 //    {
 //        return "albumView";
 //    }
-    @GetMapping(value = "/adminPanel/content", params = "id")
-    public ResponseEntity<Resource> serveContent(@RequestParam String id)
+@GetMapping(value = "/adminPanel/thumbnails")
+public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestParam int thumbnailWidth,  @RequestParam int thumbnailHeight)
+{
+    try{
+        Content contentToRetrieve = fileService.getContentById(id);
+//      String fileType = contentToRetrieve.getFileType();
+        Resource resource = new FileSystemResource(contentToRetrieve.getPath());
+        //serve thumbnail of file
+        File fileToThumbnail =   resource.getFile();
+        String thumbnailPath = fileService.createThumbnail(fileToThumbnail, thumbnailWidth, thumbnailHeight);
+        Resource thumbnailResource = new FileSystemResource(thumbnailPath);
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(thumbnailResource);
+    }
+    catch(Exception exception)
     {
-
+        return ResponseEntity.badRequest().build();
+    }
+}
+    @GetMapping(value = "/adminPanel/content")
+    public ResponseEntity<Resource> serveContent(@RequestParam int id)
+    {
         try{
-            Content contentToRetrieve = fileService.getContentByName(id);
+            Content contentToRetrieve = fileService.getContentById(id);
+//          String fileType = contentToRetrieve.getFileType();
             Resource resource = new FileSystemResource(contentToRetrieve.getPath());
-            String filename = resource.getFilename();
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG) // Set the appropriate content type
                     .body(resource);
-
         }
         catch(Exception exception)
         {
             return ResponseEntity.badRequest().build();
         }
-
-
-
     }
     @RequestMapping(value = "/adminPanel/album", method = RequestMethod.GET, params = "id")
     public ResponseEntity<List<Content>> retrieveContentFromAlbum(@RequestParam String id)

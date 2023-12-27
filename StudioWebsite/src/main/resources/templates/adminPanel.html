@@ -248,21 +248,7 @@
         imageObserver = new IntersectionObserver(handleIntersection, options);
     })
 
-    function displayAlbumData(album)
-    {
-        let url = currentUrl + 'adminPanel/album?id=' + album.album_title;
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                displayContent(data);
-            })
-            .catch(error => alert("Error fetching album data"));
-    }
+
     function loadAlbums(){
         var albumContainer = document.getElementById('albumContainer');
         fetch('/adminPanel?getAlbums')
@@ -345,7 +331,23 @@
         }
     }
 
-    function displayContent(contents) {
+    function displayAlbumData(album)
+    {
+        let url = currentUrl + 'adminPanel/album?id=' + album.album_title;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayThumbnails(data);
+            })
+            .catch(error => alert("Error fetching album data"));
+    }
+
+    function displayThumbnails(contents) {
 
         const container = document.getElementById('imageContainer');
         container.innerHTML = '';
@@ -355,7 +357,7 @@
                 const imageItem = document.createElement('div');
                 imageItem.classList.add('image-item');
                 const imgElement = document.createElement('img');
-                imgElement.setAttribute('data-src', currentUrl+'adminPanel/content?id=' + content.fileName);
+                imgElement.setAttribute('data-src', currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200");
                 imageObserver.observe(imgElement);
 
                 const infoBar = document.createElement('div');

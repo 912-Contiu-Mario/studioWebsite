@@ -42,6 +42,8 @@ public class Image implements Content{
     {
         return "image";
     }
+
+
     @Override
     public String getPath()
     {
@@ -56,5 +58,11 @@ public class Image implements Content{
     @Override
     public String getFileName() {
         return image_name;
+    }
+
+    @Override
+    public int getFileId()
+    {
+        return this.id;
     }
 }

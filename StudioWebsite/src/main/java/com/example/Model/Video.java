@@ -47,6 +47,13 @@ public class Video implements Content{
         return video_path;
     }
 
+
+    @Override
+    public int getFileId()
+    {
+        return this.id;
+    }
+
     @Override
     public Date getUploadDate() {
         return upload_date;

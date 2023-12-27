@@ -8,6 +8,8 @@ public interface Content {
     public String getPath();
     public Date getUploadDate();
 
+    public int getFileId();
+
     public String getFileName();
 
 

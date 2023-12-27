@@ -7,11 +7,20 @@ import com.example.Model.Video;
 import com.example.Repository.AlbumRepository;
 import com.example.Repository.ImageRepository;
 import com.example.Repository.VideoRepository;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class FileService {
@@ -55,11 +64,11 @@ public class FileService {
     }
 
 
-    public Content getContentByName(String fileName) throws Exception
+    public Content getContentById(int fileId) throws Exception
     {
-        Content contentToRetrieve = imageRepository.findImageByImageName(fileName);
+        Content contentToRetrieve = imageRepository.findImageById(fileId);
         if(contentToRetrieve == null)
-            contentToRetrieve = videoRepository.findVideoByVideoName(fileName);
+            contentToRetrieve = videoRepository.findVideoById(fileId);
         if(contentToRetrieve == null)
             throw new Exception("Content not found");
         return contentToRetrieve;
@@ -85,6 +94,18 @@ public class FileService {
        Album savedAlbum = albumRepository.save(album);
         albumRepository.flush();
         return savedAlbum;
+    }
+
+    public String createThumbnail(File fileToThumbnail, int width, int height) throws IOException {
+
+        String thumbnailName = "thumbnail-"+fileToThumbnail.getName();
+        String thumbnailPath = "D:\\ServerFiles\\Thumbnails\\" +thumbnailName;
+        Path pathToThumbnail = Paths.get(thumbnailPath);
+        if(Files.exists(pathToThumbnail))
+            return thumbnailPath;
+        File thumbnail = new File(thumbnailPath);
+        Thumbnails.of(fileToThumbnail).size(width,height).toFile(thumbnail);
+        return thumbnailPath;
     }
 
 }

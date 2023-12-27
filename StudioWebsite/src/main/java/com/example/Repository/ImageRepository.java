@@ -18,6 +18,14 @@ public interface ImageRepository extends JpaRepository<Image, Integer> {
     @Query("SELECT i FROM Image i WHERE i.image_name = :image_name")
     Image findImageByImageName(@Param("image_name") String image_name);
 
+    @Query("SELECT i FROM Image i WHERE i.id = :id")
+    Image findImageById(@Param("id") int id);
+
+
+
+    @Query("Select i FROM Image i WHERE i.image_name = :image_name AND i.album_id = :album_id")
+    Image findImageByImageNameAndAlbumId(@Param("image_name") String image_name, @Param("album_id")int album_id);
+
     @Query("SELECT i FROM Image i WHERE i.album_id = :album_id")
     List<Image> findImagesByAlbumId(@Param("album_id") Integer album_id);
 
