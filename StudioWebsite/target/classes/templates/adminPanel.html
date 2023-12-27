@@ -11,10 +11,15 @@
         font-family: Arial, sans-serif;
         background-color: #f4f4f4;
     }
-
+    .image-view-container{
+        display: flex;
+        flex-direction: column;
+        width: 60%;
+    }
     .container {
         display: flex;
         height: 100vh;
+
     }
 
     #section1 {
@@ -56,7 +61,7 @@
     .image-container {
         display: flex;
         flex-wrap: wrap;
-        width: 60%;
+        width: 100%;
         overflow-y: auto; /* Enable scrolling if content exceeds container height */
         justify-content: flex-start; /* Left-justify the items */
         align-items: flex-start; /* Top-align the items */
@@ -65,19 +70,29 @@
     }
 
     .image-item {
-        width: 100px; /* Set the desired width of each image tile */
-        height: 100px; /* Set the desired height of each image tile */
+        width: 120px; /* Set the desired width of each image tile */
+        height: 120px; /* Set the desired height of each image tile */
         margin: 5px; /* Add a small margin between images */
         border: 1px solid #ccc;
         border-radius: 5px;
-        overflow: hidden;
+        /*overflow: hidden;*/
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .image-item img {
+       width: 100%;
+        height: 70%;
+        object-fit: scale-down;
+    }
+
+    .image-info-bar {
+        white-space: normal;
+        padding: 5px;
+        background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+        text-align: center;
+        font-size: 8px;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: 30%;
     }
 
 
@@ -110,6 +125,33 @@
     button:hover {
         background-color: #0056b3;
     }
+    .toolbar {
+        background-color: #f8f8f8; /* Light gray background */
+        padding: 10px;
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle box shadow */
+    }
+
+    .toolbar-button {
+        background-color: #007BFF; /* Apple's blue color */
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        margin-right: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .toolbar-button:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+
+    .toolbar-button:hover {
+        background-color: #777;
+    }
 </style>
 </head>
 <body>
@@ -123,8 +165,20 @@
             <!-- Albums will be dynamically added here from the server -->
         </div>
     </div>
-    <div class="image-container" id="imageContainer">
-        <!-- Images will be dynamically added here from the server -->
+    <div class="image-view-container" id="imageView">
+        <div class="toolbar">
+            <form id="fileUploadForm" style="height: 1px">
+                <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />
+                <button type="button" class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</button>
+            </form>
+
+            <button class="toolbar-button">Button 2</button>
+            <button class="toolbar-button">Button 3</button>
+        </div>
+
+        <div class="image-container" id="imageContainer">
+            <!-- Images will be dynamically added here from the server -->
+        </div>
     </div>
     <div class="section" id="section2">
         <form id="albumForm" onsubmit="createAlbum()">
@@ -135,10 +189,8 @@
         </form>
         <button onclick="createUser()">Create new user</button>
         <br /><br />
-        <form id="fileUploadForm">
-            <input type="file" name="file" id="fileInput" />
-            <button type="button" onclick="uploadFile()">Upload File</button>
-        </form>
+
+
     </div>
 </div>
 
@@ -157,13 +209,44 @@
 
 
 <script>
-    let currentUrl = "http://192.168.1.102:8080/";
+    let currentUrl = "http://192.168.100.101:8080/";
     let currentAlbum = '';
+    let imageObserver;
     document.addEventListener('DOMContentLoaded', function() {
         // Add an event listener to the "Create Album" button
         // Load existing albums on page load
         loadAlbums();
     });
+
+    document.addEventListener('DOMContentLoaded', function(){
+        const lazyImages = document.querySelectorAll('.lazy-image');
+
+        const options = {
+            root:null,
+            rootMargin: '0px',
+            threshold: 0.5
+        };
+
+        function handleIntersection(entries, observer){
+            entries.forEach(entry => {
+                if(entry.isIntersecting){
+                    loadImage(entry.target);
+                    observer.unobserve(entry.target)
+                }
+            })
+        }
+
+        function loadImage(image)
+        {
+            const src = image.getAttribute('data-src');
+            if(src)
+            {
+                image.src = src;
+            }
+        }
+
+        imageObserver = new IntersectionObserver(handleIntersection, options);
+    })
 
     function displayAlbumData(album)
     {
@@ -210,49 +293,39 @@
                 });
             })
     }
-    function previewImage() {
-        const fileInput = document.getElementById('image');
-        const imagePreview = document.getElementById('imagePreview');
-
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                imagePreview.src = e.target.result;
-                imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            imagePreview.src = '#';
-            imagePreview.style.display = 'none';
-        }
-    }
-
     let csrfToken = document.querySelector('meta[name="_csrf"]').content;
 
     function uploadFile()
     {
         const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
-        if(file)
+        for(let i = 0; i < fileInput.files.length;i++)
         {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('albumName', currentAlbum.album_title);
-            fetch(currentUrl + 'adminPanel?upload',{
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                }
-            }).then(response => {
-                if(!response.ok){
-                    alert("Couldn't upload file")
-                }
-                else{
-                    displayAlbumData(currentAlbum);
-                }
-            })
+            const file = fileInput.files[i];
+            if(file)
+            {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('albumName', currentAlbum.album_title);
+                fetch(currentUrl + 'adminPanel?upload',{
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                }).then(response => {
+                    if(!response.ok){
+                        alert("Couldn't upload file")
+                    }
+
+
+
+
+                })
+            }
         }
+        displayAlbumData(currentAlbum);
+
+
     }
 
     function createAlbum()
@@ -277,23 +350,27 @@
     }
 
     function displayContent(contents) {
+
         const container = document.getElementById('imageContainer');
         container.innerHTML = '';
         contents.forEach(content => {
             if (content.fileType === 'image') {
 
                 const imageItem = document.createElement('div');
-
                 imageItem.classList.add('image-item');
-
                 const imgElement = document.createElement('img');
-                imgElement.src = currentUrl+'adminPanel/content?id=' + content.fileName;
+                imgElement.setAttribute('data-src', currentUrl+'adminPanel/content?id=' + content.fileName);
+                imageObserver.observe(imgElement);
 
-                // Append the image element to the image item
+                const infoBar = document.createElement('div');
+                infoBar.classList.add('image-info-bar')
+                infoBar.innerText = content.fileName;
+
                 imageItem.appendChild(imgElement);
-
-                // Append the image item to the container
+                imageItem.appendChild(infoBar);
                 container.appendChild(imageItem);
+
+
             } else if (content.fileType === 'video') {
                 const videoItem = document.createElement('div');
                 videoItem.classList.add('image-item');

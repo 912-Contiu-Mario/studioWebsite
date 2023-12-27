@@ -123,7 +123,7 @@ public class HomeController {
             file.transferTo(new File(filepath));
             if (filename != null && (filename.endsWith(".mp4") || filename.endsWith(".avi") || filename.endsWith(".mov"))) {
                 Video savedVideo = fileService.saveVideo(albumName, filename, filepath);
-            } else if (filename != null && (filename.endsWith(".jpg") || filename.endsWith(".png"))) {
+            } else if (filename != null && (filename.endsWith(".jpeg")||filename.endsWith(".jpg") || filename.endsWith(".png"))) {
                 Image savedImage = fileService.saveImage(albumName, filename, filepath);
             }
             else throw new Exception("File type not supported");
