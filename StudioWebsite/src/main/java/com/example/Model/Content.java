@@ -12,5 +12,9 @@ public interface Content {
 
     public String getFileName();
 
+    public String getFileUploader();
+
+    public float getFileSize();
+
 
 }

@@ -29,18 +29,38 @@ public class Video implements Content{
     @Column(name = "video_path")
     private String video_path;
 
+
+    @Column(name = "video_uploader")
+    private String video_uploader;
+
+    @Column(name="video_size")
+    private float video_size;
+
     @Column(insertable = false, name = "upload_date")
     private Date upload_date;
 
-    public Video(int album_id, String video_name, String video_path) {
+
+
+
+
+    public Video(int album_id, String video_name, String video_path, String video_uploader, float video_size) {
         this.album_id = album_id;
         this.video_name = video_name;
         this.video_path = video_path;
+        this.video_uploader=video_uploader;
+        this.video_size=video_size;
     }
+
+
+
+    @Override
     public String getFileType()
     {
         return "video";
     }
+
+
+    @Override
 
     public String getPath()
     {
@@ -63,4 +83,15 @@ public class Video implements Content{
     public String getFileName() {
         return video_name;
     }
+
+    @Override
+    public String getFileUploader() {
+        return video_uploader;
+    }
+
+    @Override
+    public float getFileSize() {
+        return video_size;
+    }
+
 }

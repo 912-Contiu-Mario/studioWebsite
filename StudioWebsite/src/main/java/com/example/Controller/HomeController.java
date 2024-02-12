@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,8 @@ public class HomeController {
     @RequestMapping(value = "adminPanel")
     public String adminPanel()
     {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return "adminPanel";
     }
 
@@ -135,10 +139,14 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
             String filename = file.getOriginalFilename();
             String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
             file.transferTo(new File(filepath));
+            double bytesSize = file.getSize();
+            float megabytesSize = (float) bytesSize/(1000*1000);
+            int aux =(int) (megabytesSize * 100);
+            megabytesSize = (float)aux/100;
             if (filename != null && (filename.endsWith(".mp4") || filename.endsWith(".avi") || filename.endsWith(".mov"))) {
-                Video savedVideo = fileService.saveVideo(albumName, filename, filepath);
+                Video savedVideo = fileService.saveVideo(albumName, filename, filepath,megabytesSize);
             } else if (filename != null && (filename.endsWith(".jpeg")||filename.endsWith(".jpg") || filename.endsWith(".png"))) {
-                Image savedImage = fileService.saveImage(albumName, filename, filepath);
+                Image savedImage = fileService.saveImage(albumName, filename, filepath,megabytesSize);
             }
             else throw new Exception("File type not supported");
             return ResponseEntity.ok("File uploaded successfully!");
@@ -149,6 +157,24 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
                     .body("An error occurred during file upload. Please try again.");
         }
 
+    }
+
+
+    @RequestMapping(value = "/adminPanel/removeImage", method = RequestMethod.POST)
+    public  ResponseEntity<?> removeImage(@RequestParam("id") int imageId, @RequestParam("albumId") String albumName ){
+        try{
+            String fileName = fileService.getContentById(imageId).getFileName();
+            String filepath = "D:/ServerFiles/" + albumName +"/" + fileName;
+            Path filePath = Paths.get(filepath);
+            Files.deleteIfExists(filePath);
+            fileService.deleteImage(imageId);
+        }
+        catch(Exception exception)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Couldn't remove file. Please try again.");
+        }
+        return ResponseEntity.ok("File removed successfully");
     }
 
     @RequestMapping(value = "")

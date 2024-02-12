@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <meta name="_csrf" th:content="${_csrf.token}"/>
-
 <title>Admin Panel</title>
 <style>
     body, html {
@@ -14,7 +13,7 @@
     .image-view-container{
         display: flex;
         flex-direction: column;
-        width: 60%;
+        width: 100%;
     }
     .container {
         display: flex;
@@ -22,22 +21,14 @@
 
     }
 
-    #section1 {
-        width: 80%;
-        flex: 1;
-        padding: 20px;
-        background-color: #fff;
-        border-right: 1px solid #ccc;
-        box-sizing: border-box;
-        overflow-y: auto; /* Enable scrolling if content exceeds container height */
-    }
+
 
     .album-container {
         display: flex;
         flex-direction: column;
         width: 40%;
         min-width: 200px;
-        margin-right: 20px;
+        /*margin-right: 20px;*/
     }
 
     .album-section {
@@ -79,6 +70,12 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
+
+    .full-res-image{
+        object-fit: scale-down;
+
+    }
+
     .image-item img {
        width: 100%;
         height: 70%;
@@ -96,11 +93,15 @@
     }
 
 
-    #section2 {
+    .image-info-container {
         width: 20%;
         flex: 1;
         padding: 20px;
-        background-color: #fff;
+        background: linear-gradient(45deg, #f7f7f7, #e7e7e7);
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+
         box-sizing: border-box;
         overflow-y: auto; /* Enable scrolling if content exceeds container height */
     }
@@ -129,11 +130,21 @@
         background-color: #f8f8f8; /* Light gray background */
         padding: 10px;
         display: flex;
-        justify-content: flex-start;
+
+        justify-content: space-between;
         width: 100%;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle box shadow */
     }
 
+    .toolbar-button-section{
+        display: flex;
+        align-self: flex-end;
+
+    }
+
+    .toolbar-info-section{
+        height: 50%;
+    }
     .toolbar-button {
         background-color: #007BFF; /* Apple's blue color */
         color: white;
@@ -152,60 +163,136 @@
     .toolbar-button:hover {
         background-color: #777;
     }
+
+    .full-res-image-item {
+        width: 100%; /* Set a maximum width for the container */
+        overflow: hidden; /* Hide any overflow content */
+    }
+
+    .full-res-image-item-img {
+        width: 100%; /* Make the image take up 100% of the container width */
+        height: auto; /* Maintain the aspect ratio of the image */
+        object-fit: scale-down; /* Scale down the content to fit within the container */
+    }
+
+
+
+    .side-bar {
+        height: 100%;
+        width: 0;
+        position:fixed;
+        z-index: 1;
+        left:0;
+        background-color: #cccccc;
+        overflow-x: hidden;
+        padding-top: 60px;
+        transition: 0.5s;
+    }
+    .side-bar .closebtn{
+        position:absolute;
+        top:0;
+        right: 25px;
+        font-size:36px;
+        margin-left:50px;
+    }
+    .image-view-container{
+        transition: margin-left .5s;
+        /*padding: 20px;*/
+    }
+
+
+    .side-bar a {
+        padding: 8px 8px 8px 32px;
+        text-decoration: none;
+        font-size: 25px;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+    }
+
+
+    .selected {
+        border: 2px solid blue; /* Example styling for selected images */
+    }
+
+    .image-details {
+        padding: 20px;
+        text-align: center;
+        background-color: #fff;
+        border-top: 1px solid #ddd;
+    }
+
+    .image-details h2 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .image-details p {
+        margin: 5px 0;
+        color: #555;
+    }
+
+
+    .loading-circle {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        top: 25%; /* Center vertically */
+        left: 50%; /* Center horizontally */
+        position: relative; /* Position fixed to keep it centered relative to the viewport */
+
+
+        animation: spin 1s linear infinite;
+        display: none; /* Initially hidden */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+
 </style>
 </head>
 <body>
 <div style="text-align: center;"> <h1>ADMIN PANEL</h1></div>
 <div class="container">
-    <div class="section" id="section1">
-        <div id="albumFormContainer">
-            <!-- You can add any form related to albums here if needed -->
+    <div class="container" style="width: 80%">
+        <div id="albumSideBar" class="side-bar">
+                <!-- Albums will be dynamically added here from the server -->
         </div>
-        <div id="albumContainer" class="album-container">
-            <!-- Albums will be dynamically added here from the server -->
+        <span onclick="openNav()">open</span>
+        <div class="image-view-container"  id="imageView">
+            <div class="toolbar">
+                <div class="toolbar-info-section">
+                    <p id="current-album-title">sugi pula</p>
+                </div>
+                <div class="toolbar-button-section">
+                    <form id="fileUploadForm" style="height: 1px">
+                        <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />
+                        <button type="button" class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</button>
+                    </form>
+                    <button class="toolbar-button" onclick="deletePictures()">Delete</button>
+                    <button class="toolbar-button">Button 3</button>
+                </div>
+
+            </div>
+            <div class="image-container" id="imageContainer">
+                <!-- Images will be dynamically added here from the server -->
+            </div>
         </div>
     </div>
-    <div class="image-view-container" id="imageView">
-        <div class="toolbar">
-            <form id="fileUploadForm" style="height: 1px">
-                <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />
-                <button type="button" class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</button>
-            </form>
-
-            <button class="toolbar-button">Button 2</button>
-            <button class="toolbar-button">Button 3</button>
-        </div>
-
-        <div class="image-container" id="imageContainer">
-            <!-- Images will be dynamically added here from the server -->
-        </div>
-    </div>
-    <div class="section" id="section2">
-        <form id="albumForm" onsubmit="createAlbum()">
-            <label for="albumTitle">Title:</label>
-            <input type="text" id="albumTitle" required />
-            <br />
-            <button type="submit">Create Album</button>
-        </form>
-        <button onclick="createUser()">Create new user</button>
-        <br /><br />
+    <div class="image-info-container" id="image-info">
+        <div id="loading-circle" class="loading-circle"></div>
 
 
     </div>
 </div>
 
-<script>
-    // You can add your JavaScript code here
-</script>
-<!--<div>-->
-<!--    <form id="uploadForm">-->
-<!--        <label for="image">Choose an image:</label>-->
-<!--        <input type="file" id="image" name="image" accept="image/*" onchange="previewImage()">-->
-<!--        <br>-->
-<!--        <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">-->
-<!--        <br>-->
-<!--        <input type="submit" value="Upload">-->
-<!--    </form>-->
+
+
 
 
 <script>
@@ -227,6 +314,9 @@
             threshold: 0.5
         };
 
+
+
+
         function handleIntersection(entries, observer){
             entries.forEach(entry => {
                 if(entry.isIntersecting){
@@ -241,6 +331,7 @@
             const src = image.getAttribute('data-src');
             if(src)
             {
+
                 image.src = src;
             }
         }
@@ -248,19 +339,61 @@
         imageObserver = new IntersectionObserver(handleIntersection, options);
     })
 
+    function openNav() {
+        document.getElementById("albumSideBar").style.width = "250px";
+        document.getElementById("imageView").style.marginLeft = "250px";
+    }
 
+    function deletePictures() {
+        let imageItems = Array.from(document.getElementsByClassName("selected"));
+        let promises = [];
+
+        imageItems.forEach(imageItem => {
+            let imageId = imageItem.getAttribute("imageId");
+            let url = currentUrl + "adminPanel/removeImage?id=" + imageId + "&albumId=" + currentAlbum.album_title;
+
+            let promise = fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error("Couldn't delete file");
+                }
+            });
+
+            promises.push(promise);
+        });
+
+        Promise.all(promises)
+            .then(() => {
+                // All images deleted successfully, now display album data
+                displayAlbumData(currentAlbum);
+            })
+            .catch(error => {
+                alert(error.message); // Display error message if any image deletion fails
+            });
+    }
+
+    function closeNav()
+    {
+        document.getElementById("albumSideBar").style.width = "0";
+        document.getElementById("imageView").style.marginLeft = "0";
+    }
     function loadAlbums(){
-        var albumContainer = document.getElementById('albumContainer');
+        var albumContainer = document.getElementById('albumSideBar');
         fetch('/adminPanel?getAlbums')
             .then(response => response.json())
             .then(albums=>{
-                albumContainer.innerHTML = '';
+                albumContainer.innerHTML = '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>';
                 albums.forEach(album => {
                     let albumDiv = document.createElement('div');
                     albumDiv.classList.add('album');
                     albumDiv.addEventListener('click', function() {
                         // Handle the click event (e.g., navigate to a detailed view)
                         currentAlbum = album;
+                        document.getElementById("current-album-title").textContent=currentAlbum.album_title;
                         displayAlbumData(currentAlbum);
                     });
 
@@ -347,15 +480,82 @@
             .catch(error => alert("Error fetching album data"));
     }
 
+
+    function processFileSize(fileSize)
+    {
+        if(fileSize>1000)
+        {
+            fileSize= fileSize/1000;
+            return fileSize.toString() + " GB";
+        }
+        return fileSize.toString()+" MB";
+    }
+
     function displayThumbnails(contents) {
 
         const container = document.getElementById('imageContainer');
         container.innerHTML = '';
         contents.forEach(content => {
             if (content.fileType === 'image') {
-
                 const imageItem = document.createElement('div');
+                imageItem.setAttribute('imageId', content.fileId);
+
+
                 imageItem.classList.add('image-item');
+                imageItem.addEventListener('click', function(){
+                    imageItem.classList.toggle("selected");
+                })
+                imageItem.addEventListener('dblclick', function () {
+                    let imageInfoContainer = document.getElementById("image-info");
+                    imageInfoContainer.innerHTML = ' <div id="loading-circle" class="loading-circle"></div>'; // Clear the existing content
+
+                    let loadingCircle = document.getElementById("loading-circle");
+                    loadingCircle.style.display = "block"; // Show the loading circle
+
+                    let url = currentUrl + 'adminPanel/content?id=' + content.fileId;
+
+                    let fullResImgItem = document.createElement("div");
+                    fullResImgItem.classList.add("full-res-image-item");
+
+                    let fullResImg = document.createElement("img");
+                    fullResImg.classList.add("full-res-image-item-img");
+                    fullResImg.src = url;
+
+
+                    fullResImg.onload = function () {
+                        loadingCircle.style.display = "none";
+                        imageInfoContainer.appendChild(fullResImgItem);
+                        imageInfoContainer.appendChild(imageDetails);
+                    };
+
+                    fullResImgItem.appendChild(fullResImg);
+
+                    let imageDetails = document.createElement("div");
+                    imageDetails.classList.add("image-details");
+
+                    let imageName = document.createElement("h2");
+                    imageName.classList.add("image-name");
+                    imageName.textContent = content.fileName;
+
+                    let imageUploader = document.createElement("p");
+                    imageUploader.classList.add("image-uploader");
+                    imageUploader.textContent = "Uploader: " + content.fileUploader;
+
+                    let imageUploadTime = document.createElement("p");
+                    imageUploadTime.classList.add("image-upload-time");
+                    imageUploadTime.textContent = "Upload date: " + content.uploadDate;
+
+                    let imageSize = document.createElement("p");
+                    imageSize.classList.add("image-size");
+                    let fileSizeString = processFileSize(content.fileSize);
+                    imageSize.textContent = "Size: " + fileSizeString;
+
+                    imageDetails.appendChild(imageName);
+                    imageDetails.appendChild(imageUploader);
+                    imageDetails.appendChild(imageUploadTime);
+                    imageDetails.appendChild(imageSize);
+
+                });
                 const imgElement = document.createElement('img');
                 imgElement.setAttribute('data-src', currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200");
                 imageObserver.observe(imgElement);

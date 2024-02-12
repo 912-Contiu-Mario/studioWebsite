@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -34,19 +36,30 @@ public class FileService {
 
     @Autowired
     AlbumRepository albumRepository;
-    public Image saveImage(String albumName, String filename, String path)
+    public Image saveImage(String albumName, String filename, String path, float image_size)
     {
+
         Album album = albumRepository.findAlbumByTitle(albumName);
-        Image imageToSave = new Image(album.getId(), filename, path);
+        Image imageToSave = new Image(album.getId(), filename, path, SecurityContextHolder.getContext().getAuthentication().getName(), image_size) ;
         Image savedImage = imageRepository.save(imageToSave);
         imageRepository.flush();
         return savedImage;
     }
 
-    public Video saveVideo(String albumName, String filename, String path)
+
+    public void deleteImage(int imageId)
+    {
+        imageRepository.deleteById(imageId);
+    }
+
+    public void deleteVideo(int videoId)
+    {
+        videoRepository.deleteById(videoId);
+    }
+    public Video saveVideo(String albumName, String filename, String path, float video_size)
     {
         Album album = albumRepository.findAlbumByTitle(albumName);
-        Video videoToSave = new Video(album.getId(), filename, path);
+        Video videoToSave = new Video(album.getId(), filename, path,SecurityContextHolder.getContext().getAuthentication().getName(), video_size);
         Video savedVideo = videoRepository.save(videoToSave);
         videoRepository.flush();
         return savedVideo;
