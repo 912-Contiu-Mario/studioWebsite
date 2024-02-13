@@ -1,9 +1,6 @@
 package com.example.Service;
 
-import com.example.Model.Album;
-import com.example.Model.Content;
-import com.example.Model.Image;
-import com.example.Model.Video;
+import com.example.Model.*;
 import com.example.Repository.AlbumRepository;
 import com.example.Repository.ImageRepository;
 import com.example.Repository.VideoRepository;
@@ -15,6 +12,7 @@ import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,42 +26,95 @@ import java.util.regex.Pattern;
 public class FileService {
     @Autowired
     ImageRepository imageRepository;
-
     @Autowired
     VideoRepository videoRepository;
-
-
-
     @Autowired
     AlbumRepository albumRepository;
-    public Image saveImage(String albumName, String filename, String path, float image_size)
-    {
 
-        Album album = albumRepository.findAlbumByTitle(albumName);
-        Image imageToSave = new Image(album.getId(), filename, path, SecurityContextHolder.getContext().getAuthentication().getName(), image_size) ;
-        Image savedImage = imageRepository.save(imageToSave);
-        imageRepository.flush();
-        return savedImage;
+    public Image saveImage(MultipartFile image, String albumName) throws FileException, RepositoryException {
+        String filename = image.getOriginalFilename();
+        String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
+        try{
+            image.transferTo(new File(filepath));}
+        catch(IOException exception){
+            throw new FileException("Image couldn't be saved on disk");
+        }
+        double bytesSize = image.getSize();
+        float megabytesSize = (float) bytesSize/(1000*1000);
+        int aux =(int) (megabytesSize * 100);
+        megabytesSize = (float)aux/100;
+
+        try {
+            Album album = albumRepository.findAlbumByTitle(albumName);
+            Image imageToSave = new Image(album.getId(), filename, filepath, SecurityContextHolder.getContext().getAuthentication().getName(), megabytesSize);
+            Image savedImage = imageRepository.save(imageToSave);
+            imageRepository.flush();
+            return savedImage;
+        }
+        catch(Exception exception)
+        {
+            throw new RepositoryException("Image couldn't be saved in database");
+        }
     }
 
 
-    public void deleteImage(int imageId)
-    {
-        imageRepository.deleteById(imageId);
+    public String fileType(MultipartFile file) throws FileException {
+        String filename = file.getOriginalFilename();
+        if (filename != null && (filename.endsWith(".mp4") || filename.endsWith(".avi") || filename.endsWith(".mov")))
+            return "video";
+        else if (filename != null && (filename.endsWith(".jpeg")||filename.endsWith(".jpg") || filename.endsWith(".png")))
+            return "image";
+        else throw new FileException("File type unsupported");
+    }
+
+    public void deleteContent(Content contentToDelete, String albumToDeleteFrom) throws FileException, RepositoryException {
+        String fileName =contentToDelete.getFileName();
+        String filepath = "D:/ServerFiles/" + albumToDeleteFrom +"/" + fileName;
+        Path filePath = Paths.get(filepath);
+        try {
+             Files.deleteIfExists(filePath);
+        }
+        catch(IOException exception){
+            throw new FileException("Couldn't delete file from disk");
+        }
+        try{
+            if(contentToDelete instanceof Image)
+                imageRepository.deleteById(contentToDelete.getFileId());
+            else if(contentToDelete instanceof Video)
+                videoRepository.deleteById(contentToDelete.getFileId());}
+        catch(Exception exception) {
+            throw new RepositoryException("Couldn't delete file from database");
+        }
     }
 
     public void deleteVideo(int videoId)
     {
         videoRepository.deleteById(videoId);
     }
-    public Video saveVideo(String albumName, String filename, String path, float video_size)
-    {
-        Album album = albumRepository.findAlbumByTitle(albumName);
-        Video videoToSave = new Video(album.getId(), filename, path,SecurityContextHolder.getContext().getAuthentication().getName(), video_size);
-        Video savedVideo = videoRepository.save(videoToSave);
-        videoRepository.flush();
-        return savedVideo;
+
+    public Video saveVideo(MultipartFile video, String albumName) throws FileException, RepositoryException {
+        String filename = video.getOriginalFilename();
+        String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
+        try{
+        video.transferTo(new File(filepath));}
+        catch(IOException exception){
+            throw new FileException("Couldn't delete video from disk");
+        }
+        double bytesSize = video.getSize();
+        float megabytesSize = (float) bytesSize/(1000*1000);
+        int aux =(int) (megabytesSize * 100);
+        megabytesSize = (float)aux/100;
+        try{
+            Album album = albumRepository.findAlbumByTitle(albumName);
+            Video videoToSave = new Video(album.getId(), filename, filepath,SecurityContextHolder.getContext().getAuthentication().getName(), megabytesSize);
+            Video savedVideo = videoRepository.save(videoToSave);
+            videoRepository.flush();
+            return savedVideo;}
+        catch (Exception exception){
+            throw  new RepositoryException("Coudln't delete video from database");
+        }
     }
+
     public List<Album> getAlbums()
     {
         List<Album> albums=albumRepository.findAll();
@@ -83,7 +134,7 @@ public class FileService {
         if(contentToRetrieve == null)
             contentToRetrieve = videoRepository.findVideoById(fileId);
         if(contentToRetrieve == null)
-            throw new Exception("Content not found");
+            throw new FileException("Content not found");
         return contentToRetrieve;
     }
 
@@ -102,14 +153,25 @@ public class FileService {
         return  contentList;
     }
 
-    public Album saveAlbum(Album album)
-    {
+    public Album saveAlbum(Album album) throws RepositoryException, FileException {
+        String folderPath = "D:\\ServerFiles\\" + album.getAlbum_title();
+        Path newFolderPath = Paths.get(folderPath);
+        try{
+        Files.createDirectory(newFolderPath);}
+        catch(IOException exception){
+            throw new FileException("Couldn't save album on disk");
+        }
+        try{
        Album savedAlbum = albumRepository.save(album);
         albumRepository.flush();
-        return savedAlbum;
+        return savedAlbum;}
+        catch(Exception exception)
+        {
+            throw new RepositoryException("Couldn't save album in database");
+        }
     }
 
-    public String createThumbnail(File fileToThumbnail, int width, int height) throws IOException {
+    public String createThumbnail(File fileToThumbnail, int width, int height) throws FileException {
 
         String thumbnailName = "thumbnail-"+fileToThumbnail.getName();
         String thumbnailPath = "D:\\ServerFiles\\Thumbnails\\" +thumbnailName;
@@ -117,8 +179,13 @@ public class FileService {
         if(Files.exists(pathToThumbnail))
             return thumbnailPath;
         File thumbnail = new File(thumbnailPath);
+        try{
         Thumbnails.of(fileToThumbnail).size(width,height).toFile(thumbnail);
-        return thumbnailPath;
+        return thumbnailPath;}
+        catch(IOException exception)
+        {
+            throw new FileException("Couldn't save thumbnail on disk");
+        }
     }
 
 }

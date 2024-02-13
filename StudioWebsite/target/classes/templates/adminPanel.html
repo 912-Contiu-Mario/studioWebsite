@@ -296,7 +296,7 @@
 
 
 <script>
-    let currentUrl = "http://192.168.100.101:8080/";
+    let currentUrl = "http://192.168.1.104:8080/";
     let currentAlbum = '';
     let imageObserver;
     document.addEventListener('DOMContentLoaded', function() {
@@ -350,7 +350,7 @@
 
         imageItems.forEach(imageItem => {
             let imageId = imageItem.getAttribute("imageId");
-            let url = currentUrl + "adminPanel/removeImage?id=" + imageId + "&albumId=" + currentAlbum.album_title;
+            let url = currentUrl + "adminPanel?removeContent&id=" + imageId + "&albumId=" + currentAlbum.album_title;
 
             let promise = fetch(url, {
                 method: 'POST',
@@ -414,33 +414,42 @@
     }
     let csrfToken = document.querySelector('meta[name="_csrf"]').content;
 
-    function uploadFile()
-    {
+    function uploadFile() {
         const fileInput = document.getElementById('fileInput');
-        for(let i = 0; i < fileInput.files.length;i++)
-        {
+        const uploadPromises = [];
+
+        for (let i = 0; i < fileInput.files.length; i++) {
             const file = fileInput.files[i];
-            if(file)
-            {
+            if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('albumName', currentAlbum.album_title);
-                fetch(currentUrl + 'adminPanel?upload',{
+
+                const uploadPromise = fetch(currentUrl + 'adminPanel?upload', {
                     method: 'POST',
                     body: formData,
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
                     }
                 }).then(response => {
-                    if(!response.ok){
-                        alert("Couldn't upload file")
+                    if (!response.ok) {
+                        throw new Error("Couldn't upload file");
                     }
-                })
+                });
+
+                uploadPromises.push(uploadPromise);
             }
         }
-        displayAlbumData(currentAlbum);
+        fileInput.value = null;
 
 
+        Promise.all(uploadPromises)
+            .then(() => {
+                displayAlbumData(currentAlbum);
+            })
+            .catch(error => {
+                alert(error.message); // Display error message if any file upload fails
+            });
     }
 
     function createAlbum()
@@ -508,7 +517,6 @@
                 imageItem.addEventListener('dblclick', function () {
                     let imageInfoContainer = document.getElementById("image-info");
                     imageInfoContainer.innerHTML = ' <div id="loading-circle" class="loading-circle"></div>'; // Clear the existing content
-
                     let loadingCircle = document.getElementById("loading-circle");
                     loadingCircle.style.display = "block"; // Show the loading circle
 

@@ -54,38 +54,31 @@ public class HomeController {
 
     @RequestMapping(value = "adminPanel",method = RequestMethod.GET, params = "getAlbums")
     public ResponseEntity<List<Album>> retrieveAlbums() {
-       return ResponseEntity.ok(fileService.getAlbums());
+        return ResponseEntity.ok(fileService.getAlbums());
     }
-//    @RequestMapping(value = "/adminPanel/album", method =  RequestMethod.GET)
-//    public String albumPage()
-//
-//    {
-//        return "albumView";
-//    }
-@GetMapping(value = "/adminPanel/thumbnails")
-public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestParam int thumbnailWidth,  @RequestParam int thumbnailHeight)
-{
-    try{
-        Content contentToRetrieve = fileService.getContentById(id);
-//      String fileType = contentToRetrieve.getFileType();
-        Resource resource = new FileSystemResource(contentToRetrieve.getPath());
-        //serve thumbnail of file
-        File fileToThumbnail =   resource.getFile();
-        String thumbnailPath = fileService.createThumbnail(fileToThumbnail, thumbnailWidth, thumbnailHeight);
-        Resource thumbnailResource = new FileSystemResource(thumbnailPath);
-        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(thumbnailResource);
-    }
-    catch(Exception exception)
+
+    @GetMapping(value = "/adminPanel/thumbnails")
+    public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestParam int thumbnailWidth,  @RequestParam int thumbnailHeight)
     {
-        return ResponseEntity.badRequest().build();
+        try{
+            Content contentToRetrieve = fileService.getContentById(id);
+            Resource resource = new FileSystemResource(contentToRetrieve.getPath());
+            //serve thumbnail of file
+            File fileToThumbnail = resource.getFile();
+            String thumbnailPath = fileService.createThumbnail(fileToThumbnail, thumbnailWidth, thumbnailHeight);
+            Resource thumbnailResource = new FileSystemResource(thumbnailPath);
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(thumbnailResource);
+        }
+        catch(Exception exception)
+        {
+            return ResponseEntity.badRequest().build();
+        }
     }
-}
     @GetMapping(value = "/adminPanel/content")
     public ResponseEntity<Resource> serveContent(@RequestParam int id)
     {
         try{
             Content contentToRetrieve = fileService.getContentById(id);
-//          String fileType = contentToRetrieve.getFileType();
             Resource resource = new FileSystemResource(contentToRetrieve.getPath());
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG) // Set the appropriate content type
@@ -111,14 +104,10 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
     }
 
 
-    //needs better error handling
     @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "createAlbum")
     public String createAlbum(@RequestBody Album album)
     {
         try{
-            String folderPath = "D:\\ServerFiles\\" + album.getAlbum_title();
-            Path newFolderPath = Paths.get(folderPath);
-            Files.createDirectory(newFolderPath);
             Album savedAlbum = fileService.saveAlbum(album);
             if(savedAlbum == null)
                 return "redirect:/register?error";
@@ -134,20 +123,13 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
     @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "upload")
     public  ResponseEntity<?> uploadFile(@RequestParam("file")MultipartFile file, @RequestParam("albumName")String albumName)
     {
-        try {
 
-            String filename = file.getOriginalFilename();
-            String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
-            file.transferTo(new File(filepath));
-            double bytesSize = file.getSize();
-            float megabytesSize = (float) bytesSize/(1000*1000);
-            int aux =(int) (megabytesSize * 100);
-            megabytesSize = (float)aux/100;
-            if (filename != null && (filename.endsWith(".mp4") || filename.endsWith(".avi") || filename.endsWith(".mov"))) {
-                Video savedVideo = fileService.saveVideo(albumName, filename, filepath,megabytesSize);
-            } else if (filename != null && (filename.endsWith(".jpeg")||filename.endsWith(".jpg") || filename.endsWith(".png"))) {
-                Image savedImage = fileService.saveImage(albumName, filename, filepath,megabytesSize);
-            }
+        try{
+            String fileType = fileService.fileType(file);
+            if(fileType.equals("image")){
+                Image savedImage = fileService.saveImage(file, albumName);}
+            else if(fileType.equals("video")){
+                Video savedVideo = fileService.saveVideo(file, albumName);}
             else throw new Exception("File type not supported");
             return ResponseEntity.ok("File uploaded successfully!");
         }
@@ -160,14 +142,11 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
     }
 
 
-    @RequestMapping(value = "/adminPanel/removeImage", method = RequestMethod.POST)
-    public  ResponseEntity<?> removeImage(@RequestParam("id") int imageId, @RequestParam("albumId") String albumName ){
+    @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "removeContent")
+    public  ResponseEntity<?> removeContent(@RequestParam("id") int imageId, @RequestParam("albumId") String albumToDeleteFrom ){
         try{
-            String fileName = fileService.getContentById(imageId).getFileName();
-            String filepath = "D:/ServerFiles/" + albumName +"/" + fileName;
-            Path filePath = Paths.get(filepath);
-            Files.deleteIfExists(filePath);
-            fileService.deleteImage(imageId);
+            Content contentToDelete = fileService.getContentById(imageId);
+            fileService.deleteContent(contentToDelete, albumToDeleteFrom);
         }
         catch(Exception exception)
         {
@@ -178,7 +157,9 @@ public ResponseEntity<Resource> serveThumbnails(@RequestParam int id, @RequestPa
     }
 
     @RequestMapping(value = "")
-    public String index(){return "index";}
+    public String index(){
+        return "index";
+    }
 
     @RequestMapping(value = "/register",method = RequestMethod.GET)
     public String register(){
