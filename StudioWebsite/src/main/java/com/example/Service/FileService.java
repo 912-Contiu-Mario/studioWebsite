@@ -1,9 +1,15 @@
 package com.example.Service;
 
 import com.example.Model.*;
+
+
 import com.example.Repository.AlbumRepository;
 import com.example.Repository.ImageRepository;
 import com.example.Repository.VideoRepository;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.plugin.AVI_Reader;
+import ij.process.ImageProcessor;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -14,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import javax.print.attribute.standard.Media;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -66,6 +75,33 @@ public class FileService {
             return "image";
         else throw new FileException("File type unsupported");
     }
+
+    public String fileType(String filename) throws FileException {
+        if (filename != null && (filename.endsWith(".mp4") || filename.endsWith(".avi") || filename.endsWith(".mov")))
+            return "video";
+        else if (filename != null && (filename.endsWith(".jpeg")||filename.endsWith(".jpg") || filename.endsWith(".png")))
+            return "image";
+        else throw new FileException("File type unsupported");
+    }
+
+
+    public String fileType(int fileId)  throws FileException {
+        Video video = videoRepository.findVideoById(fileId);
+        if(video != null)
+        {
+            String videoName = video.getFileName();
+            return videoName.substring(videoName.indexOf('.'));
+        }
+        Image image = imageRepository.findImageById(fileId);
+        if(image != null)
+        {
+            String imageName = image.getFileName();
+            return imageName.substring(imageName.indexOf('.'));
+        }
+        throw new FileException("File type unsupported");
+    }
+
+
 
     public void deleteContent(Content contentToDelete, String albumToDeleteFrom) throws FileException, RepositoryException {
         String fileName =contentToDelete.getFileName();
@@ -180,8 +216,21 @@ public class FileService {
             return thumbnailPath;
         File thumbnail = new File(thumbnailPath);
         try{
-        Thumbnails.of(fileToThumbnail).size(width,height).toFile(thumbnail);
-        return thumbnailPath;}
+            if(this.fileType(fileToThumbnail.getName())=="image"){
+                Thumbnails.of(fileToThumbnail).size(width,height).toFile(thumbnail);
+                return thumbnailPath;
+            }
+            else {
+//                  couldnt get image from video.
+//                //"D:\ServerFiles\main\Untitled video - Made with Clipchamp.mp4"
+//                ImageStack stack = new AVI_Reader().makeStack(fileToThumbnail.getPath(), 1, 100,false, false, false);
+//                ImageProcessor processor = stack.getProcessor(0);
+//                java.awt.Image image = processor.createImage();
+//                ImageIO.write((RenderedImage)image, "png", new File(thumbnailPath));
+//                return thumbnailPath
+                  return "D:\\ServerFiles\\Thumbnails\\thumbnail-anyVideo.png";
+          }
+        }
         catch(IOException exception)
         {
             throw new FileException("Couldn't save thumbnail on disk");

@@ -18,7 +18,6 @@
     .container {
         display: flex;
         height: 100vh;
-
     }
 
 
@@ -71,6 +70,9 @@
     }
 
 
+
+
+
     .full-res-image{
         object-fit: scale-down;
 
@@ -82,7 +84,7 @@
         object-fit: scale-down;
     }
 
-    .image-info-bar {
+    .content-info-bar {
         white-space: normal;
         padding: 5px;
         background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
@@ -93,7 +95,7 @@
     }
 
 
-    .image-info-container {
+    .content-info-container {
         width: 20%;
         flex: 1;
         padding: 20px;
@@ -169,7 +171,18 @@
         overflow: hidden; /* Hide any overflow content */
     }
 
+    .full-video-item{
+        width: 100%; /* Set a maximum width for the container */
+        overflow: hidden; /* Hide any overflow content */
+    }
+
     .full-res-image-item-img {
+        width: 100%; /* Make the image take up 100% of the container width */
+        height: auto; /* Maintain the aspect ratio of the image */
+        object-fit: scale-down; /* Scale down the content to fit within the container */
+    }
+
+    .full-video-item-video {
         width: 100%; /* Make the image take up 100% of the container width */
         height: auto; /* Maintain the aspect ratio of the image */
         object-fit: scale-down; /* Scale down the content to fit within the container */
@@ -200,6 +213,19 @@
         /*padding: 20px;*/
     }
 
+    .images-sidebar-container-extended{
+        width: 100%;
+        display: flex;
+        height: 100vh;
+    }
+
+    .images-sidebar-container-non-extended{
+        width: 80%;
+        display: flex;
+        height: 100vh;
+    }
+
+
 
     .side-bar a {
         padding: 8px 8px 8px 32px;
@@ -215,19 +241,19 @@
         border: 2px solid blue; /* Example styling for selected images */
     }
 
-    .image-details {
+    .content-details {
         padding: 20px;
         text-align: center;
         background-color: #fff;
         border-top: 1px solid #ddd;
     }
 
-    .image-details h2 {
+    .content-details h2 {
         margin-bottom: 10px;
         color: #333;
     }
 
-    .image-details p {
+    .content-details p {
         margin: 5px 0;
         color: #555;
     }
@@ -253,13 +279,61 @@
         100% { transform: rotate(360deg); }
     }
 
+    .apple-top-bar {
+        background-color: #f8f8f8;
+        color: #333;
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-name {
+        margin-right: 10px;
+    }
+
+    .logout-btn,
+    .create-account-btn {
+        padding: 8px 12px;
+        margin-right: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .logout-btn:hover,
+    .create-account-btn:hover {
+        background-color: #0056b3;
+    }
+
 
 </style>
 </head>
 <body>
-<div style="text-align: center;"> <h1>ADMIN PANEL</h1></div>
-<div class="container">
-    <div class="container" style="width: 80%">
+<div class="apple-top-bar">
+    <div class="logo">Your Website</div>
+    <div class="user-info">
+        <span class="user-name" id="username"></span>
+        <button class="logout-btn" onclick="logoutCurrentUser()">Logout</button>
+        <button class="create-account-btn" onclick="createAccount()">Create Account</button>
+        <!-- Add other buttons as needed -->
+    </div>
+</div>
+<div class="container" id="main-container">
+    <div class="images-sidebar-container-extended" id="images-sidebar-container">
         <div id="albumSideBar" class="side-bar">
                 <!-- Albums will be dynamically added here from the server -->
         </div>
@@ -267,7 +341,7 @@
         <div class="image-view-container"  id="imageView">
             <div class="toolbar">
                 <div class="toolbar-info-section">
-                    <p id="current-album-title">sugi pula</p>
+                    <p id="current-album-title"></p>
                 </div>
                 <div class="toolbar-button-section">
                     <form id="fileUploadForm" style="height: 1px">
@@ -277,33 +351,62 @@
                     <button class="toolbar-button" onclick="deletePictures()">Delete</button>
                     <button class="toolbar-button">Button 3</button>
                 </div>
-
             </div>
             <div class="image-container" id="imageContainer">
                 <!-- Images will be dynamically added here from the server -->
             </div>
         </div>
     </div>
-    <div class="image-info-container" id="image-info">
-        <div id="loading-circle" class="loading-circle"></div>
-
-
-    </div>
 </div>
 
-
-
-
-
 <script>
-    let currentUrl = "http://192.168.1.104:8080/";
+    let currentUrl = "http://192.168.100.101:8080/";
     let currentAlbum = '';
     let imageObserver;
     let currentAlbumData;
-    let currentAlbumData;
+
+    function createAccount()
+    {
+        document.location=currentUrl+"adminPanel/register";
+    }
+    function logoutCurrentUser(){
+        document.location=currentUrl+"logout";
+    }
+    const getCurrentUser=()=>{
+        fetch(currentUrl+"adminPanel/connectedUser", {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+            }
+        })
+            .then(response=>{
+                if(!response.ok)
+                    throw new Error("Network response was not ok");
+                else
+                    return response.json();
+            })
+            .then(data=>{
+                return data;
+            })
+    }
     document.addEventListener('DOMContentLoaded', function() {
-        // Add an event listener to the "Create Album" button
-        // Load existing albums on page load
+
+        fetch(currentUrl+"adminPanel/connectedUser", {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+            }
+        })
+            .then(response=>{
+                if(!response.ok)
+                    throw new Error("Network response was not ok");
+                else
+                    return response.json();
+            })
+            .then(data=>{
+                document.getElementById("username").innerHTML = data.name;
+            })
+
         loadAlbums();
     });
 
@@ -315,6 +418,9 @@
             rootMargin: '0px',
             threshold: 0.5
         };
+
+
+
 
 
 
@@ -341,6 +447,14 @@
         imageObserver = new IntersectionObserver(handleIntersection, options);
     })
 
+
+    const processTime = (time)=>{
+        let stringTime = time.toString();
+        let date = stringTime.substring(0,stringTime.indexOf("T"));
+        let hourMinuteSeconds = stringTime.substring(stringTime.indexOf("T")+1);
+        let hourMinute = hourMinuteSeconds.substring(0, hourMinuteSeconds.indexOf(".")-3);
+        return  hourMinute+" "+ date ;
+    }
     function openNav() {
         document.getElementById("albumSideBar").style.width = "250px";
         document.getElementById("imageView").style.marginLeft = "250px";
@@ -370,7 +484,6 @@
 
         Promise.all(promises)
             .then(() => {
-                // All images deleted successfully, now display album data
                 displayAlbumData(currentAlbum);
             })
             .catch(error => {
@@ -408,7 +521,7 @@
                     albumDiv.appendChild(usernameElement)
 
                     let creationDateElement = document.createElement('strong');
-                    creationDateElement.textContent = album.creation_date;
+                    creationDateElement.textContent = processTime(album.creation_date);
                     albumDiv.appendChild(creationDateElement)
                     albumContainer.appendChild(albumDiv);
                 });
@@ -504,99 +617,272 @@
         return fileSize.toString()+" MB";
     }
 
+
+    function createContentInfoContainer(){
+        if(document.getElementById("content-info") == null){
+
+        let contentInfoContainer = document.createElement("div");
+        contentInfoContainer.classList.add("content-info-container");
+        contentInfoContainer.id = "content-info";
+
+
+        let loadingCircle = document.createElement("div");
+        loadingCircle.id = "loading-circle";
+        loadingCircle.classList.add("loading-circle");
+
+// Append loading-circle to content-info-container
+        contentInfoContainer.appendChild(loadingCircle);
+
+// Find the target div where you want to append content-info-container
+        let main_container = document.getElementById("main-container");
+
+// Append content-info-container to the target div
+        main_container.appendChild(contentInfoContainer)}
+
+    }
+
     function displayThumbnails(contents) {
+
+
+        const createImageItem = (content) => {
+            const imageItem = document.createElement('div');
+            imageItem.setAttribute('imageId', content.fileId);
+            imageItem.classList.add('image-item');
+            imageItem.addEventListener('click', function(){
+                imageItem.classList.toggle("selected");
+            })
+
+            let imgElement = createImageElement(content);
+            let infoBar = createInfoBar(content);
+            imageItem.appendChild(imgElement);
+            imageItem.appendChild(infoBar);
+            return imageItem;
+        };
+
+
+
+        const createInfoBar = (content)=>{
+            const infoBar = document.createElement('div');
+            infoBar.classList.add('content-info-bar')
+            infoBar.innerText = content.fileName;
+            return infoBar;
+        }
+
+
+        const createImageElement = (content)=>{
+            const imgElement = document.createElement('img');
+            imgElement.setAttribute('data-src', currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200");
+            imageObserver.observe(imgElement);
+            return imgElement;
+        }
+
+        const createFullResImgItem = () =>{
+            let fullResImgItem = document.createElement("div");
+            fullResImgItem.classList.add("full-res-image-item");
+            return fullResImgItem;
+        }
+
+        const createFullResImg = (content) =>{
+            let fullResImg = document.createElement("img");
+            let url = currentUrl + 'adminPanel/content?id=' + content.fileId;
+            fullResImg.classList.add("full-res-image-item-img");
+            fullResImg.src = url;
+            return fullResImg;
+        }
+
+        const createImageDetails = (content) => {
+            const imageDetails = document.createElement("div");
+            imageDetails.classList.add("content-details");
+
+            let imageName = document.createElement("h2");
+            imageName.classList.add("image-name");
+            imageName.textContent = content.fileName;
+
+            let imageUploader = document.createElement("p");
+            imageUploader.classList.add("image-uploader");
+            imageUploader.textContent = "Uploader: " + content.fileUploader;
+
+            let imageUploadTime = document.createElement("p");
+            imageUploadTime.classList.add("image-upload-time");
+            imageUploadTime.textContent = "Upload date: " +processTime(content.uploadDate);
+
+            let imageSize = document.createElement("p");
+            imageSize.classList.add("image-size");
+            let fileSizeString = processFileSize(content.fileSize);
+            imageSize.textContent = "Size: " + fileSizeString;
+
+            imageDetails.appendChild(imageName);
+            imageDetails.appendChild(imageUploader);
+            imageDetails.appendChild(imageUploadTime);
+            imageDetails.appendChild(imageSize);
+
+            return imageDetails;
+        };
+
+
+        const createContentInfoContainer = ()=>{
+            const contentInfoContainer = document.createElement("div");
+            contentInfoContainer.classList.add("content-info-container");
+            contentInfoContainer.id = "content-info";
+
+            return contentInfoContainer;
+        }
+
+        const createLoadingCircle = ()=>{
+            const loadingCircle = document.createElement("div");
+            loadingCircle.id = "loading-circle";
+            loadingCircle.classList.add("loading-circle");
+            loadingCircle.style.display = "block"; // Show the loading circle
+            return loadingCircle;
+        }
+
+
+        const handleDbClick = (content)=>{
+
+        }
+
 
         const container = document.getElementById('imageContainer');
         container.innerHTML = '';
         contents.forEach(content => {
             if (content.fileType === 'image') {
-                const imageItem = document.createElement('div');
-                imageItem.setAttribute('imageId', content.fileId);
+                const imageItem = createImageItem(content);
 
-
-                imageItem.classList.add('image-item');
-                imageItem.addEventListener('click', function(){
-                    imageItem.classList.toggle("selected");
-                })
                 imageItem.addEventListener('dblclick', function () {
-                    let imageInfoContainer = document.getElementById("image-info");
-                    imageInfoContainer.innerHTML = ' <div id="loading-circle" class="loading-circle"></div>'; // Clear the existing content
+
+                    let imageInfoContainer = document.getElementById("content-info");
+
+                    if (!imageInfoContainer) {
+                        imageInfoContainer = createContentInfoContainer();
+                        let mainContainer = document.getElementById("main-container");
+                        mainContainer.appendChild(imageInfoContainer);
+                    }
+                    imageInfoContainer.style.display = "block";
+                    let imagesSidebarContainer = document.getElementById("images-sidebar-container");
+                    imagesSidebarContainer.classList.replace("images-sidebar-container-extended", "images-sidebar-container-non-extended");
+
+                    const closeButton = document.createElement("button");
+                    closeButton.innerHTML = "&times;"; // Use the HTML entity for "times" (X)
+                    closeButton.classList.add("close-button");
+                    closeButton.addEventListener("click", () => {
+                        imageInfoContainer.style.display = "none"; // Hide the container
+                        imagesSidebarContainer.classList.replace( "images-sidebar-container-non-extended","images-sidebar-container-extended");
+                    });
+
+                    imageInfoContainer.innerHTML='';
+                    imageInfoContainer.appendChild(closeButton);
+                    let loadingCircle = createLoadingCircle();
+                    imageInfoContainer.appendChild(loadingCircle);
+
+
+                    let fullResImg = createFullResImg(content);
+                    let fullResImgItem = createFullResImgItem();
+                    fullResImgItem.appendChild(fullResImg);
+
+                    let imageDetails = createImageDetails(content);
+
+                    fullResImg.onload = function () {
+                        // Assuming loadingCircle is already defined, you can retrieve it using document.getElementById
+                        let loadingCircle = document.getElementById("loading-circle");
+                        if (loadingCircle) {
+                            loadingCircle.style.display = "none";
+                        }
+                        imageInfoContainer.appendChild(fullResImgItem);
+                        imageInfoContainer.appendChild(imageDetails);
+                    };
+                });
+                container.appendChild(imageItem);
+
+
+            }  else if (content.fileType === 'video') {
+
+                // const imageItem = document.createElement('div');
+                // imageItem.setAttribute('imageId', content.fileId);
+                // imageItem.classList.add('image-item');
+
+
+                const videoItem = document.createElement('div');
+                videoItem.setAttribute('videoId', content.fileId);
+                videoItem.classList.add('image-item');
+                videoItem.addEventListener('click', function(){
+                    videoItem.classList.toggle("selected");
+                });
+
+                videoItem.addEventListener('dblclick', function () {
+                    let contentInfoContainer = document.getElementById("content-info");
+                    contentInfoContainer.innerHTML = ' <div id="loading-circle" class="loading-circle"></div>'; // Clear the existing content
                     let loadingCircle = document.getElementById("loading-circle");
                     loadingCircle.style.display = "block"; // Show the loading circle
 
                     let url = currentUrl + 'adminPanel/content?id=' + content.fileId;
 
-                    let fullResImgItem = document.createElement("div");
-                    fullResImgItem.classList.add("full-res-image-item");
+                    let fullVideoItem = document.createElement("div");
+                    fullVideoItem.classList.add("full-video-item");
 
-                    let fullResImg = document.createElement("img");
-                    fullResImg.classList.add("full-res-image-item-img");
-                    fullResImg.src = url;
+                    let fullVideo = document.createElement("video");
+                    fullVideo.classList.add("full-video-item-video");
+                    fullVideo.src = url;
 
-
-                    fullResImg.onload = function () {
+                    fullVideo.addEventListener('loadedmetadata', function() {
                         loadingCircle.style.display = "none";
-                        imageInfoContainer.appendChild(fullResImgItem);
-                        imageInfoContainer.appendChild(imageDetails);
-                    };
+                        contentInfoContainer.appendChild(fullVideoItem);
+                        contentInfoContainer.appendChild(videoDetails);
+                    });
+                    fullVideoItem.appendChild(fullVideo);
 
-                    fullResImgItem.appendChild(fullResImg);
+                    let videoDetails = document.createElement("div");
+                    videoDetails.classList.add("content-details");
 
-                    let imageDetails = document.createElement("div");
-                    imageDetails.classList.add("image-details");
+                    let videoName = document.createElement("h2");
+                    videoName.classList.add("video-name");
+                    videoName.textContent = content.fileName;
 
-                    let imageName = document.createElement("h2");
-                    imageName.classList.add("image-name");
-                    imageName.textContent = content.fileName;
+                    let videoUploader = document.createElement("p");
+                    videoUploader.classList.add("video-uploader");
+                    videoUploader.textContent = "Uploader: " + content.fileUploader;
 
-                    let imageUploader = document.createElement("p");
-                    imageUploader.classList.add("image-uploader");
-                    imageUploader.textContent = "Uploader: " + content.fileUploader;
+                    let videoUploadTime = document.createElement("p");
+                    videoUploadTime.classList.add("video-upload-time");
+                    videoUploadTime.textContent = "Upload date: " + content.uploadDate;
 
-                    let imageUploadTime = document.createElement("p");
-                    imageUploadTime.classList.add("image-upload-time");
-                    imageUploadTime.textContent = "Upload date: " + content.uploadDate;
-
-                    let imageSize = document.createElement("p");
-                    imageSize.classList.add("image-size");
+                    let videoSize = document.createElement("p");
+                    videoSize.classList.add("image-size");
                     let fileSizeString = processFileSize(content.fileSize);
-                    imageSize.textContent = "Size: " + fileSizeString;
+                    videoSize.textContent = "Size: " + fileSizeString;
 
-                    imageDetails.appendChild(imageName);
-                    imageDetails.appendChild(imageUploader);
-                    imageDetails.appendChild(imageUploadTime);
-                    imageDetails.appendChild(imageSize);
+                    videoDetails.appendChild(videoName);
+                    videoDetails.appendChild(videoUploader);
+                    videoDetails.appendChild(videoUploadTime);
+                    videoDetails.appendChild(videoSize);
 
                 });
                 const imgElement = document.createElement('img');
                 imgElement.setAttribute('data-src', currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200");
                 imageObserver.observe(imgElement);
 
+                // const infoBar = document.createElement('div');
+                // infoBar.classList.add('content-info-bar')
+                // infoBar.innerText = content.fileName;
+
+                // imageItem.appendChild(imgElement);
+                // imageItem.appendChild(infoBar);
+                // container.appendChild(imageItem);
+
+                const videoElement = document.createElement('img');
+                videoElement.src = currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200";
+                imageObserver.observe(videoElement);
+
                 const infoBar = document.createElement('div');
-                infoBar.classList.add('image-info-bar')
+                infoBar.classList.add('content-info-bar')
                 infoBar.innerText = content.fileName;
-
-                imageItem.appendChild(imgElement);
-                imageItem.appendChild(infoBar);
-                container.appendChild(imageItem);
-
-
-            } else if (content.fileType === 'video') {
-                const videoItem = document.createElement('div');
-                videoItem.classList.add('image-item');
-
-                const videoElement = document.createElement('video');
-                videoElement.src = currentUrl + 'adminPanel/content/' + content.fileName;
-
                 // Append the video element to the video item
                 videoItem.appendChild(videoElement);
-
+                videoItem.appendChild(infoBar);
                 // Append the video item to the container
                 container.appendChild(videoItem);
             }
         });
     }
-
 </script>
 </body>
 </html>

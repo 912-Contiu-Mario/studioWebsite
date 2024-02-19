@@ -52,7 +52,13 @@ public class HomeController {
     }
 
 
-    @RequestMapping(value = "adminPanel",method = RequestMethod.GET, params = "getAlbums")
+    @GetMapping(value = "adminPanel/connectedUser")
+    public ResponseEntity<Authentication> getConnectedUser(){
+        return ResponseEntity.ok(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+
+     @RequestMapping(value = "adminPanel",method = RequestMethod.GET, params = "getAlbums")
     public ResponseEntity<List<Album>> retrieveAlbums() {
         return ResponseEntity.ok(fileService.getAlbums());
     }
@@ -67,7 +73,9 @@ public class HomeController {
             File fileToThumbnail = resource.getFile();
             String thumbnailPath = fileService.createThumbnail(fileToThumbnail, thumbnailWidth, thumbnailHeight);
             Resource thumbnailResource = new FileSystemResource(thumbnailPath);
-            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(thumbnailResource);
+            String fileType = fileService.fileType(id);
+                return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(thumbnailResource);
+
         }
         catch(Exception exception)
         {
@@ -79,10 +87,18 @@ public class HomeController {
     {
         try{
             Content contentToRetrieve = fileService.getContentById(id);
+            String contentType = fileService.fileType(id);
             Resource resource = new FileSystemResource(contentToRetrieve.getPath());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG) // Set the appropriate content type
-                    .body(resource);
+            if(contentType.equals(".jpeg")||contentType.equals(".jpg")||contentType.equals(".png")){
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG) // Set the appropriate content type
+                        .body(resource);
+            }
+            else{
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("video/"+contentType.substring(1)))  // Set the appropriate video content type
+                        .body(resource);
+            }
         }
         catch(Exception exception)
         {
@@ -103,7 +119,6 @@ public class HomeController {
         }
     }
 
-
     @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "createAlbum")
     public String createAlbum(@RequestBody Album album)
     {
@@ -117,8 +132,6 @@ public class HomeController {
         {
             return "redirect:/register?error";
         }
-
-
     }
     @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "upload")
     public  ResponseEntity<?> uploadFile(@RequestParam("file")MultipartFile file, @RequestParam("albumName")String albumName)
@@ -138,9 +151,7 @@ public class HomeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred during file upload. Please try again.");
         }
-
     }
-
 
     @RequestMapping(value = "/adminPanel", method = RequestMethod.POST, params = "removeContent")
     public  ResponseEntity<?> removeContent(@RequestParam("id") int imageId, @RequestParam("albumId") String albumToDeleteFrom ){
@@ -161,12 +172,12 @@ public class HomeController {
         return "index";
     }
 
-    @RequestMapping(value = "/register",method = RequestMethod.GET)
+    @RequestMapping(value = "/adminPanel/register",method = RequestMethod.GET)
     public String register(){
         return "register";
     }
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    @RequestMapping(value = "/adminPanel/register", method = RequestMethod.POST)
     public String registerUser(@RequestBody User user)
     {
         try{
@@ -176,14 +187,12 @@ public class HomeController {
             user.setPassword(encodedPassword);
             User newUser = userService.saveUser(user);
             if(newUser == null){
-                return "redirect:/register?error";
+                return "redirect:/adminPanel/register?error";
             }
-            return "redirect:/register?success";
+            return "redirect:/adminPanel/register?success";
         }
         catch (Exception e){
-            return "redirect:/register?error";
+            return "redirect:/adminPanel/register?error";
         }
     }
-
-
 }
