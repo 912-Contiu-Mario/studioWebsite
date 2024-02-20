@@ -8,16 +8,21 @@
         padding: 0;
         height: 100%;
         font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
+        background-color: #f8f8f8;
     }
     .image-view-container{
         display: flex;
         flex-direction: column;
-        width: 100%;
+        flex:100%;
     }
     .container {
         display: flex;
         height: 100vh;
+    }
+    .main-container {
+        display: flex;
+        height: 100vh;
+        padding-top: 20px;
     }
 
 
@@ -48,10 +53,22 @@
         background-color: #f0f0f0;
     }
 
-    .image-container {
+    .image-container-extended {
         display: flex;
         flex-wrap: wrap;
-        width: 100%;
+        flex: 100%;
+        overflow-y: auto; /* Enable scrolling if content exceeds container height */
+        justify-content: flex-start; /* Left-justify the items */
+        align-items: flex-start; /* Top-align the items */
+        align-content: flex-start; /* Top-align the items */
+        gap: 5px;
+
+    }
+    .image-container-non-extended {
+
+        display: flex;
+        flex-wrap: wrap;
+        flex: 80%;
         overflow-y: auto; /* Enable scrolling if content exceeds container height */
         justify-content: flex-start; /* Left-justify the items */
         align-items: flex-start; /* Top-align the items */
@@ -59,18 +76,17 @@
         gap: 5px;
     }
 
+
     .image-item {
         width: 120px; /* Set the desired width of each image tile */
         height: 120px; /* Set the desired height of each image tile */
-        margin: 5px; /* Add a small margin between images */
+         /* Add a small margin between images */
         border: 1px solid #ccc;
         border-radius: 5px;
         /*overflow: hidden;*/
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin:5px;
     }
-
-
-
 
 
     .full-res-image{
@@ -96,8 +112,7 @@
 
 
     .content-info-container {
-        width: 20%;
-        flex: 1;
+        flex: 20%;
         padding: 20px;
         background: linear-gradient(45deg, #f7f7f7, #e7e7e7);
         overflow: hidden;
@@ -128,14 +143,51 @@
     button:hover {
         background-color: #0056b3;
     }
+    .selection-toolbar {
+        background-color: #e6f7ff; /* Light blue background for selection toolbar */
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle box shadow */
+        border-radius: 10px; /* Smaller border radius for selection toolbar */
+        border: 1px solid #99c2ff; /* Light blue border */
+    }
+
+
+    .selection-toolbar-button {
+        background-color: #99c2ff; /* Light blue color */
+        color: #004080; /* Darker blue text color */
+        border: none;
+        padding: 8px 16px;
+        margin-right: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .selection-toolbar-button:hover {
+        background-color: #66a3ff; /* Darker blue on hover */
+        color: #003366; /* Darker text color on hover */
+    }
+
+    .selection-toolbar-info-button {
+        /*background-color: #007BFF; !* Apple's blue color *!*/
+        border: 1px solid #ddd;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+
+
     .toolbar {
         background-color: #f8f8f8; /* Light gray background */
         padding: 10px;
         display: flex;
-
         justify-content: space-between;
         width: 100%;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle box shadow */
+        /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); !* Subtle box shadow *!*/
+        border-radius: 10px;
+        border:1px solid #ddd;
     }
 
     .toolbar-button-section{
@@ -144,8 +196,11 @@
 
     }
 
+
+
     .toolbar-info-section{
-        height: 50%;
+        display: flex;
+        align-self: flex-start;
     }
     .toolbar-button {
         background-color: #007BFF; /* Apple's blue color */
@@ -162,9 +217,17 @@
         background-color: #0056b3; /* Darker blue on hover */
     }
 
-    .toolbar-button:hover {
-        background-color: #777;
+    .toolbar-info-button {
+        /*background-color: #007BFF; !* Apple's blue color *!*/
+        border: 1px solid #ddd;
+        padding: 8px 16px;
+        border-radius: 6px;
     }
+
+    .toolbar-info-button-hidden {
+        display: none;
+    }
+
 
     .full-res-image-item {
         width: 100%; /* Set a maximum width for the container */
@@ -191,41 +254,31 @@
 
 
     .side-bar {
+        min-width: 15%;
         height: 100%;
-        width: 0;
-        position:fixed;
+        flex: 15%;
         z-index: 1;
         left:0;
-        background-color: #cccccc;
+        background-color: #f8f8f8;
         overflow-x: hidden;
-        padding-top: 60px;
-        transition: 0.5s;
+        padding-left: 20px;
+        padding-right: 20px;
+        display: flex; /* Enable flexbox */
+        flex-direction: column; /* Arrange elements vertically */
+        align-items: flex-start; /* Top-align the items */
+        align-content: flex-start; /* Top-align the items */
     }
-    .side-bar .closebtn{
-        position:absolute;
-        top:0;
-        right: 25px;
-        font-size:36px;
-        margin-left:50px;
-    }
-    .image-view-container{
-        transition: margin-left .5s;
-        /*padding: 20px;*/
-    }
+
+
 
     .images-sidebar-container-extended{
-        width: 100%;
+        flex: 85%;
         display: flex;
         height: 100vh;
+        /*margin-left: 2%;*/
+
+
     }
-
-    .images-sidebar-container-non-extended{
-        width: 80%;
-        display: flex;
-        height: 100vh;
-    }
-
-
 
     .side-bar a {
         padding: 8px 8px 8px 32px;
@@ -319,6 +372,22 @@
         background-color: #0056b3;
     }
 
+    #images-functions-toolbar {
+        position: absolute; /* Set the toolbar to absolute */
+        bottom: 0; /* Stick to the bottom of the container */
+        left: 0; /* Align to the left edge of the container */
+        width: 100%; /* Take up full width of the container */
+        background-color: #fff;
+        padding: 10px;
+        display: flex;
+        justify-content: space-around;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .hidden{
+        display:none;
+    }
+
 
 </style>
 </head>
@@ -332,30 +401,37 @@
         <!-- Add other buttons as needed -->
     </div>
 </div>
-<div class="container" id="main-container">
+<hr>
+<div class="main-container" id="main-container">
+    <div id="albumSideBar" class="side-bar">
+        <!-- Albums will be dynamically added here from the server -->
+    </div>
     <div class="images-sidebar-container-extended" id="images-sidebar-container">
-        <div id="albumSideBar" class="side-bar">
-                <!-- Albums will be dynamically added here from the server -->
-        </div>
-        <span onclick="openNav()">open</span>
         <div class="image-view-container"  id="imageView">
-            <div class="toolbar">
-                <div class="toolbar-info-section">
-                    <p id="current-album-title"></p>
+            <div class="toolbar" id="toolbar">
+                <div class="toolbar-info-section" id="toolbar-info-section">
+                    <div class="toolbar-info-button-hidden" id="current-album-title"></div>
                 </div>
-                <div class="toolbar-button-section">
+                <div class="toolbar-button-section" id="toolbar-button-section">
                     <form id="fileUploadForm" style="height: 1px">
                         <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />
                         <button type="button" class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</button>
                     </form>
-                    <button class="toolbar-button" onclick="deletePictures()">Delete</button>
+                    <button class="toolbar-button" onclick="deleteSelected()">Delete</button>
                     <button class="toolbar-button">Button 3</button>
                 </div>
             </div>
-            <div class="image-container" id="imageContainer">
+            <div class="container" id="image-content-info-container">
+                <div class="image-container-extended" id="imageContainer">
                 <!-- Images will be dynamically added here from the server -->
+                </div>
             </div>
+<!--            <div id="images-functions-toolbar" class="hidden">-->
+<!--                <button>Download</button>-->
+<!--                <button>Download</button>-->
+<!--            </div>-->
         </div>
+
     </div>
 </div>
 
@@ -439,11 +515,9 @@
             const src = image.getAttribute('data-src');
             if(src)
             {
-
                 image.src = src;
             }
         }
-
         imageObserver = new IntersectionObserver(handleIntersection, options);
     })
 
@@ -455,12 +529,8 @@
         let hourMinute = hourMinuteSeconds.substring(0, hourMinuteSeconds.indexOf(".")-3);
         return  hourMinute+" "+ date ;
     }
-    function openNav() {
-        document.getElementById("albumSideBar").style.width = "250px";
-        document.getElementById("imageView").style.marginLeft = "250px";
-    }
 
-    function deletePictures() {
+    function deleteSelected() {
         let imageItems = Array.from(document.getElementsByClassName("selected"));
         let promises = [];
 
@@ -485,30 +555,31 @@
         Promise.all(promises)
             .then(() => {
                 displayAlbumData(currentAlbum);
+                changeToolbarForNoSelected();
+
             })
             .catch(error => {
                 alert(error.message); // Display error message if any image deletion fails
             });
     }
 
-    function closeNav()
-    {
-        document.getElementById("albumSideBar").style.width = "0";
-        document.getElementById("imageView").style.marginLeft = "0";
-    }
+
     function loadAlbums(){
         var albumContainer = document.getElementById('albumSideBar');
         fetch('/adminPanel?getAlbums')
             .then(response => response.json())
             .then(albums=>{
-                albumContainer.innerHTML = '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>';
+                albumContainer.innerHTML = '';
                 albums.forEach(album => {
                     let albumDiv = document.createElement('div');
                     albumDiv.classList.add('album');
                     albumDiv.addEventListener('click', function() {
                         // Handle the click event (e.g., navigate to a detailed view)
                         currentAlbum = album;
-                        document.getElementById("current-album-title").textContent=currentAlbum.album_title;
+                        let currentAlbumInfoButton =  document.getElementById("current-album-title");
+                        currentAlbumInfoButton.innerHTML=currentAlbum.album_title;
+                        currentAlbumInfoButton.classList.replace("toolbar-info-button-hidden", "toolbar-info-button");
+
                         displayAlbumData(currentAlbum);
                     });
 
@@ -599,6 +670,7 @@
                 return response.json();
             })
             .then(data => {
+                console.log("This workes");
                 displayThumbnails(data);
                 currentAlbumData = data;
 
@@ -617,31 +689,116 @@
         return fileSize.toString()+" MB";
     }
 
-
-    function createContentInfoContainer(){
-        if(document.getElementById("content-info") == null){
-
-        let contentInfoContainer = document.createElement("div");
-        contentInfoContainer.classList.add("content-info-container");
-        contentInfoContainer.id = "content-info";
-
-
-        let loadingCircle = document.createElement("div");
-        loadingCircle.id = "loading-circle";
-        loadingCircle.classList.add("loading-circle");
-
-// Append loading-circle to content-info-container
-        contentInfoContainer.appendChild(loadingCircle);
-
-// Find the target div where you want to append content-info-container
-        let main_container = document.getElementById("main-container");
-
-// Append content-info-container to the target div
-        main_container.appendChild(contentInfoContainer)}
-
+    const createToolbarInfoButton = ()=>{
+        let currentSelectedNumInfoButton = document.createElement("div");
+        currentSelectedNumInfoButton.classList.add("toolbar-info-button");
+        return currentSelectedNumInfoButton;
     }
 
+    const changeToolbarInfoSectionForSelected = (selectedPhotos)=>
+    {
+        let toolbarInfoSection = document.getElementById("toolbar-info-section");
+        toolbarInfoSection.innerHTML='';
+        let currentSelectedNumInfoButton = createToolbarInfoButton();
+        currentSelectedNumInfoButton.innerHTML="Selected: " + selectedPhotos.length.toString();
+        toolbarInfoSection.appendChild(currentSelectedNumInfoButton);
+    }
+
+    const createToolbarButton = ()=>
+    {
+        let button = document.createElement("div");
+        button.classList.add("toolbar-button");
+        return button;
+    }
+
+    const createToolbarSelectionButton =()=>
+    {
+        let button = document.createElement("div");
+        button.classList.add("selection-toolbar-button");
+        return button;
+    }
+    const changeToolbarButtonSectionForSelected = ()=>{
+        if(document.getElementById("toolbar-delete-selected-button")==null){
+            let toolbarButtonSection = document.getElementById("toolbar-button-section");
+            toolbarButtonSection.innerHTML='';
+
+            let deleteSelectedButton = createToolbarSelectionButton();
+            deleteSelectedButton.innerHTML="Delete";
+            deleteSelectedButton.setAttribute('id', 'toolbar-delete-selected-button');
+            deleteSelectedButton.addEventListener('click', deleteSelected);
+
+
+            let downloadSelectedButton = createToolbarSelectionButton();
+            downloadSelectedButton.innerHTML="Download";
+            downloadSelectedButton.setAttribute('id','toolbar-download-selected-button');
+            //to implement donwload selected button
+
+            toolbarButtonSection.appendChild(deleteSelectedButton);
+            toolbarButtonSection.appendChild(downloadSelectedButton);
+        }
+    }
+
+    const changeToolbarForSelected = (selectedPhotos)=>{
+        let toolbar = document.getElementById("toolbar");
+        toolbar.classList.replace("toolbar","selection-toolbar");
+        changeToolbarInfoSectionForSelected(selectedPhotos);
+        changeToolbarButtonSectionForSelected();
+    }
+
+    const changeToolbarButtonSectionForNoSelected =()=>{
+        if(document.getElementById("toolbar-upload-button")==null) {
+            let toolbarButtonSection = document.getElementById("toolbar-button-section");
+            toolbarButtonSection.innerHTML = '\n' +
+                '            <form id="fileUploadForm" style="height: 1px">\n' +
+                '                <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onChange="uploadFile()" />\n' +
+                '                <button type="button" class="toolbar-button" onClick="document.getElementById(\'fileInput\').click()">Upload Files</button>\n' +
+                '            </form>';
+
+            // let uploadButton = createToolbarButton();
+            // uploadButton.setAttribute('id','toolbar-upload-button');
+            // uploadButton.addEventListener('click', () => {
+            //     document.getElementById('fileInput').click();
+            // });
+            // uploadButton.innerHTML = "Upload";
+
+
+            let downloadButton = createToolbarButton();
+            downloadButton.setAttribute('id', "toolbar-download-button");
+            //to implement download function
+            downloadButton.innerHTML = "Download";
+
+            let sortButton = createToolbarButton();
+            sortButton.setAttribute('id','toolbar-sort-button');
+            //to implement sort function
+            sortButton.innerHTML = "Sort";
+
+            // toolbarButtonSection.appendChild(uploadButton);
+            toolbarButtonSection.appendChild(downloadButton);
+            toolbarButtonSection.appendChild(sortButton);
+        }
+    }
+
+    const changeToolbarInfoSectionForNoSelected =()=>
+    {
+        let toolbarInfoSection = document.getElementById("toolbar-info-section");
+        toolbarInfoSection.innerHTML='';
+        let currentSelectedNumInfoButton = createToolbarInfoButton();
+        currentSelectedNumInfoButton.innerHTML=currentAlbum.album_title;
+        currentSelectedNumInfoButton.setAttribute('id','current-album-title');
+        toolbarInfoSection.appendChild(currentSelectedNumInfoButton);
+    }
+
+    const changeToolbarForNoSelected =()=>{
+        let toolbar = document.getElementById("toolbar");
+        toolbar.classList.replace("selection-toolbar", "toolbar");
+        changeToolbarInfoSectionForNoSelected();
+        changeToolbarButtonSectionForNoSelected()
+    }
+
+
+
     function displayThumbnails(contents) {
+
 
 
         const createImageItem = (content) => {
@@ -649,7 +806,14 @@
             imageItem.setAttribute('imageId', content.fileId);
             imageItem.classList.add('image-item');
             imageItem.addEventListener('click', function(){
+
                 imageItem.classList.toggle("selected");
+                const selectedPhotos = document.querySelectorAll(".selected");
+                if(selectedPhotos.length>0)
+                    changeToolbarForSelected(selectedPhotos);
+                else{
+                    changeToolbarForNoSelected();
+                }
             })
 
             let imgElement = createImageElement(content);
@@ -737,8 +901,47 @@
         }
 
 
-        const handleDbClick = (content)=>{
+        const handleImageDbClick = (content)=>{
+            let imageInfoContainer = document.getElementById("content-info");
 
+            if (!imageInfoContainer) {
+                imageInfoContainer = createContentInfoContainer();
+                let imageContentInfoContainer = document.getElementById("image-content-info-container");
+                imageContentInfoContainer.appendChild(imageInfoContainer);
+            }
+            imageInfoContainer.style.display = "block";
+            let imageContainer = document.getElementById("imageContainer");
+            imageContainer.classList.replace("image-container-extended", "image-container-non-extended");
+
+            const closeButton = document.createElement("button");
+            closeButton.innerHTML = "&times;"; // Use the HTML entity for "times" (X)
+            closeButton.classList.add("close-button");
+            closeButton.addEventListener("click", () => {
+                imageInfoContainer.style.display = "none"; // Hide the container
+                imageContainer.classList.replace( "image-container-non-extended","image-container-extended");
+            });
+
+            imageInfoContainer.innerHTML='';
+            imageInfoContainer.appendChild(closeButton);
+            let loadingCircle = createLoadingCircle();
+            imageInfoContainer.appendChild(loadingCircle);
+
+
+            let fullResImg = createFullResImg(content);
+            let fullResImgItem = createFullResImgItem();
+            fullResImgItem.appendChild(fullResImg);
+
+            let imageDetails = createImageDetails(content);
+
+            fullResImg.onload = function () {
+                // Assuming loadingCircle is already defined, you can retrieve it using document.getElementById
+                let loadingCircle = document.getElementById("loading-circle");
+                if (loadingCircle) {
+                    loadingCircle.style.display = "none";
+                }
+                imageInfoContainer.appendChild(fullResImgItem);
+                imageInfoContainer.appendChild(imageDetails);
+            };
         }
 
 
@@ -747,49 +950,8 @@
         contents.forEach(content => {
             if (content.fileType === 'image') {
                 const imageItem = createImageItem(content);
-
                 imageItem.addEventListener('dblclick', function () {
-
-                    let imageInfoContainer = document.getElementById("content-info");
-
-                    if (!imageInfoContainer) {
-                        imageInfoContainer = createContentInfoContainer();
-                        let mainContainer = document.getElementById("main-container");
-                        mainContainer.appendChild(imageInfoContainer);
-                    }
-                    imageInfoContainer.style.display = "block";
-                    let imagesSidebarContainer = document.getElementById("images-sidebar-container");
-                    imagesSidebarContainer.classList.replace("images-sidebar-container-extended", "images-sidebar-container-non-extended");
-
-                    const closeButton = document.createElement("button");
-                    closeButton.innerHTML = "&times;"; // Use the HTML entity for "times" (X)
-                    closeButton.classList.add("close-button");
-                    closeButton.addEventListener("click", () => {
-                        imageInfoContainer.style.display = "none"; // Hide the container
-                        imagesSidebarContainer.classList.replace( "images-sidebar-container-non-extended","images-sidebar-container-extended");
-                    });
-
-                    imageInfoContainer.innerHTML='';
-                    imageInfoContainer.appendChild(closeButton);
-                    let loadingCircle = createLoadingCircle();
-                    imageInfoContainer.appendChild(loadingCircle);
-
-
-                    let fullResImg = createFullResImg(content);
-                    let fullResImgItem = createFullResImgItem();
-                    fullResImgItem.appendChild(fullResImg);
-
-                    let imageDetails = createImageDetails(content);
-
-                    fullResImg.onload = function () {
-                        // Assuming loadingCircle is already defined, you can retrieve it using document.getElementById
-                        let loadingCircle = document.getElementById("loading-circle");
-                        if (loadingCircle) {
-                            loadingCircle.style.display = "none";
-                        }
-                        imageInfoContainer.appendChild(fullResImgItem);
-                        imageInfoContainer.appendChild(imageDetails);
-                    };
+                    handleImageDbClick(content);
                 });
                 container.appendChild(imageItem);
 
@@ -859,14 +1021,6 @@
                 const imgElement = document.createElement('img');
                 imgElement.setAttribute('data-src', currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200");
                 imageObserver.observe(imgElement);
-
-                // const infoBar = document.createElement('div');
-                // infoBar.classList.add('content-info-bar')
-                // infoBar.innerText = content.fileName;
-
-                // imageItem.appendChild(imgElement);
-                // imageItem.appendChild(infoBar);
-                // container.appendChild(imageItem);
 
                 const videoElement = document.createElement('img');
                 videoElement.src = currentUrl+'adminPanel/thumbnails?id=' + content.fileId +"&thumbnailWidth=200&thumbnailHeight=200";
