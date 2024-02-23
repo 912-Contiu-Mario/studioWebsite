@@ -214,11 +214,11 @@ public class FileService {
         return newFolderPath;
     }
 
-    public List<File> getFilesFromIds(List<Integer> fileIds){
+    public List<File> getFilesFromIds(List<String> fileIds){
         List<File> files = new ArrayList<File>();
         fileIds.forEach(fileID->{
             try {
-                Content content = getContentById(fileID);
+                Content content = getContentById(Integer.parseInt(fileID));
                 File file = getFileFromPath(content.getPath());
                 files.add(file);
             } catch (Exception e) {
@@ -228,7 +228,7 @@ public class FileService {
         return files;
     }
 
-    public String zipContent(List<Integer> contentToZip){
+    public String zipContent(List<String> contentToZip){
         List<File> filesToZip = getFilesFromIds(contentToZip);
         String zipFilePath = createZipFilePath("tempZip.zip");
         try

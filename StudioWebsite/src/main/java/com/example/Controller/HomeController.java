@@ -2,23 +2,35 @@ package com.example.Controller;
 import com.example.Model.*;
 import com.example.Service.FileService;
 import com.example.Service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @CrossOrigin
 @Controller
@@ -55,8 +67,8 @@ public class HomeController {
 
 
     //fix this shit now
-    @RequestMapping(value ="/adminPanel/downloadZipContent", method = RequestMethod.POST)
-    public ResponseEntity<FileSystemResource> downloadZippedContent(@RequestBody List<Integer> contentIds){
+    @RequestMapping(value ="/adminPanel/downloadZipContent", method = {RequestMethod.POST, RequestMethod.GET})
+    public ResponseEntity<FileSystemResource> downloadZippedContent(@RequestParam(value="contentIds[]") List<String> contentIds){
         try{
             String zipFilePath = fileService.zipContent(contentIds);
             FileSystemResource zipFileResource = new FileSystemResource(zipFilePath);
@@ -70,20 +82,50 @@ public class HomeController {
     }
 
 
-    @RequestMapping(value ="/adminPanel/downloadZipAlbum")
-    public ResponseEntity<FileSystemResource> DownloadZippedAlbum(@RequestParam("albumTitle") String albumTitle){
-
-        try{
-            String zipFilePath = fileService.zipFolder(albumTitle);
-            FileSystemResource zipFileResource = new FileSystemResource(zipFilePath);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("application/zip"))
-                    .body(zipFileResource);
-        }
-        catch (Exception exception){
-            return ResponseEntity.badRequest().build();
+    @GetMapping("/adminPanel/downloadZipAlbum")
+    public void zipDownload (HttpServletRequest request, HttpServletResponse response, @RequestParam("albumTitle")String albumTitle) throws IOException {
+        //this has to be in fileService
+        File f = new File(fileService.createAlbumPath(albumTitle));
+        File[] filesAux  = f.listFiles();
+        List<Path> files = new ArrayList<Path>();
+        for(File zaza:filesAux){
+            files.add(Paths.get(zaza.getAbsolutePath()));
+    }
+        ///
+        response.setContentType("application/zip"); // zip archive format
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+            .filename("download.zip", StandardCharsets.UTF_8)
+                .build()
+                .toString());
+        try(ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream())){
+        for (Path file : files) {
+            try (InputStream inputStream = Files.newInputStream(file)) {
+                zipOutputStream.putNextEntry(new ZipEntry(file.getFileName().toString()));
+                StreamUtils.copy(inputStream, zipOutputStream);
+                zipOutputStream.flush();
+            }
         }
     }
+        catch (Exception exception){
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+        }
+}
+
+
+//    @RequestMapping(value ="/adminPanel/downloadZipAlbum")
+//    public ResponseEntity<FileSystemResource> DownloadZippedAlbum(@RequestParam("albumTitle") String albumTitle){
+//
+//        try{
+//            String zipFilePath = fileService.zipFolder(albumTitle);
+//            FileSystemResource zipFileResource = new FileSystemResource(zipFilePath);
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.parseMediaType("application/zip"))
+//                    .body(zipFileResource);
+//        }
+//        catch (Exception exception){
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
 
      @RequestMapping(value = "/adminPanel",method = RequestMethod.GET, params = "getAlbums")
