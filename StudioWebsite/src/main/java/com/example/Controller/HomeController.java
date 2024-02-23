@@ -2,9 +2,7 @@ package com.example.Controller;
 import com.example.Model.*;
 import com.example.Service.FileService;
 import com.example.Service.UserService;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -19,9 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,13 +47,46 @@ public class HomeController {
     }
 
 
-    @GetMapping(value = "adminPanel/connectedUser")
+    @GetMapping(value = "/adminPanel/connectedUser")
     public ResponseEntity<Authentication> getConnectedUser(){
         return ResponseEntity.ok(SecurityContextHolder.getContext().getAuthentication());
     }
 
 
-     @RequestMapping(value = "adminPanel",method = RequestMethod.GET, params = "getAlbums")
+
+    //fix this shit now
+    @RequestMapping(value ="/adminPanel/downloadZipContent", method = RequestMethod.POST)
+    public ResponseEntity<FileSystemResource> downloadZippedContent(@RequestBody List<Integer> contentIds){
+        try{
+            String zipFilePath = fileService.zipContent(contentIds);
+            FileSystemResource zipFileResource = new FileSystemResource(zipFilePath);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("application/zip"))
+                    .body(zipFileResource);
+        }
+        catch (Exception exception){
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+
+    @RequestMapping(value ="/adminPanel/downloadZipAlbum")
+    public ResponseEntity<FileSystemResource> DownloadZippedAlbum(@RequestParam("albumTitle") String albumTitle){
+
+        try{
+            String zipFilePath = fileService.zipFolder(albumTitle);
+            FileSystemResource zipFileResource = new FileSystemResource(zipFilePath);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("application/zip"))
+                    .body(zipFileResource);
+        }
+        catch (Exception exception){
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+
+     @RequestMapping(value = "/adminPanel",method = RequestMethod.GET, params = "getAlbums")
     public ResponseEntity<List<Album>> retrieveAlbums() {
         return ResponseEntity.ok(fileService.getAlbums());
     }

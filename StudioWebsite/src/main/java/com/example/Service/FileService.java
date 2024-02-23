@@ -6,30 +6,21 @@ import com.example.Model.*;
 import com.example.Repository.AlbumRepository;
 import com.example.Repository.ImageRepository;
 import com.example.Repository.VideoRepository;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.plugin.AVI_Reader;
-import ij.process.ImageProcessor;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import javax.print.attribute.standard.Media;
-import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileService {
@@ -40,9 +31,31 @@ public class FileService {
     @Autowired
     AlbumRepository albumRepository;
 
+
+    String serverFilesPath = "D:/ServerFiles/";
+    String thumbnailsPath = "D:/ServerFiles/Thumbnails/";
+    String zipFilesPath = "D:/ServerFiles/ZipFiles/";
+
+
+    public String createZipFilePath(String zipFileName)
+    {
+        return zipFilesPath+zipFileName;
+    }
+    public String createFilePath(String albumName, String filename){
+        return serverFilesPath + albumName +"/" + filename;
+    }
+
+    public String createAlbumPath(String albumName){
+        return serverFilesPath+albumName;
+    }
+
+    public String createThumbnailPath(String thumbnailName){
+        return thumbnailsPath+thumbnailName;
+    }
+
     public Image saveImage(MultipartFile image, String albumName) throws FileException, RepositoryException {
         String filename = image.getOriginalFilename();
-        String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
+        String filepath = createFilePath(albumName, filename);
         try{
             image.transferTo(new File(filepath));}
         catch(IOException exception){
@@ -58,6 +71,9 @@ public class FileService {
             Image imageToSave = new Image(album.getId(), filename, filepath, SecurityContextHolder.getContext().getAuthentication().getName(), megabytesSize);
             Image savedImage = imageRepository.save(imageToSave);
             imageRepository.flush();
+            album.setAlbum_size(album.getAlbum_size() + imageToSave.getImage_size());
+            albumRepository.save(album);
+            albumRepository.flush();
             return savedImage;
         }
         catch(Exception exception)
@@ -105,7 +121,7 @@ public class FileService {
 
     public void deleteContent(Content contentToDelete, String albumToDeleteFrom) throws FileException, RepositoryException {
         String fileName =contentToDelete.getFileName();
-        String filepath = "D:/ServerFiles/" + albumToDeleteFrom +"/" + fileName;
+        String filepath = createFilePath(albumToDeleteFrom, fileName);
         Path filePath = Paths.get(filepath);
         try {
              Files.deleteIfExists(filePath);
@@ -114,10 +130,18 @@ public class FileService {
             throw new FileException("Couldn't delete file from disk");
         }
         try{
-            if(contentToDelete instanceof Image)
+            if(contentToDelete instanceof Image){
+
                 imageRepository.deleteById(contentToDelete.getFileId());
+            }
             else if(contentToDelete instanceof Video)
-                videoRepository.deleteById(contentToDelete.getFileId());}
+                videoRepository.deleteById(contentToDelete.getFileId());
+            Album album = albumRepository.findAlbumByTitle(albumToDeleteFrom);
+            album.setAlbum_size(album.getAlbum_size()-contentToDelete.getFileSize());
+            albumRepository.save(album);
+            albumRepository.flush();
+        }
+
         catch(Exception exception) {
             throw new RepositoryException("Couldn't delete file from database");
         }
@@ -130,7 +154,7 @@ public class FileService {
 
     public Video saveVideo(MultipartFile video, String albumName) throws FileException, RepositoryException {
         String filename = video.getOriginalFilename();
-        String filepath = "D:/ServerFiles/" + albumName +"/" + filename;
+        String filepath = createFilePath(albumName, filename);
         try{
         video.transferTo(new File(filepath));}
         catch(IOException exception){
@@ -174,6 +198,148 @@ public class FileService {
         return contentToRetrieve;
     }
 
+    public File getFileFromPath(String filePath)
+    {
+        return new File(filePath);
+    }
+
+    public Path createFolder(String path) throws FileException {
+
+        Path newFolderPath = Paths.get(path);
+        try {
+            Files.createDirectory(newFolderPath);
+        }
+        catch (IOException exception) {
+            throw new FileException("Couldn't save album on disk");}
+        return newFolderPath;
+    }
+
+    public List<File> getFilesFromIds(List<Integer> fileIds){
+        List<File> files = new ArrayList<File>();
+        fileIds.forEach(fileID->{
+            try {
+                Content content = getContentById(fileID);
+                File file = getFileFromPath(content.getPath());
+                files.add(file);
+            } catch (Exception e) {
+
+            }
+        });
+        return files;
+    }
+
+    public String zipContent(List<Integer> contentToZip){
+        List<File> filesToZip = getFilesFromIds(contentToZip);
+        String zipFilePath = createZipFilePath("tempZip.zip");
+        try
+        {
+            deleteFileOrDirectory(zipFilePath);
+        }
+        catch (FileException exception){
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(zipFilePath);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+
+            for (File file : filesToZip) {
+                if (file.isDirectory()) {
+                    // Handle directories if needed
+                    continue;
+                }
+
+                FileInputStream fis = new FileInputStream(file);
+
+                // Use relative path as the entry name
+                String entryPath = file.getName();
+                ZipEntry zipEntry = new ZipEntry(entryPath);
+                zos.putNextEntry(zipEntry);
+
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+
+                zos.closeEntry();
+                fis.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return zipFilePath;
+    }
+    public String zipFolder(String folderName) {
+        String albumPath = createAlbumPath(folderName);
+        String zipFilePath = createZipFilePath("tempZip.zip");
+        try
+        {
+        deleteFileOrDirectory(zipFilePath);}
+        catch (FileException exception){
+        }
+        try (FileOutputStream fos = new FileOutputStream(zipFilePath);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+            File sourceFile = new File(albumPath);
+
+            // Check if the source file path is valid and the directory exists
+            if (!sourceFile.exists() || !sourceFile.isDirectory()) {
+                System.out.println("Invalid source file path: " + albumPath);
+                return null;
+            }
+
+            for (File file : sourceFile.listFiles()) {
+                if (file.isDirectory()) {
+                    // Handle directories if needed
+                    continue;
+                }
+
+                FileInputStream fis = new FileInputStream(file);
+
+                // Use relative path as the entry name
+                String entryPath = file.getName();
+                ZipEntry zipEntry = new ZipEntry(entryPath);
+                zos.putNextEntry(zipEntry);
+
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+
+                zos.closeEntry();
+                fis.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return zipFilePath;
+    }
+
+    public void deleteFileOrDirectory(String filePath) throws FileException {
+        try{
+            Path path = Paths.get(filePath);
+            Files.deleteIfExists(path);}
+        catch(Exception exception){
+            throw new FileException("Couldn't delete file");
+        }
+    }
+
+    public List<String> retrieveFilePathsFromAlbum(String albumName){
+        String albumPath = createAlbumPath(albumName);
+        File album = new File(albumPath);
+        File[] files = album.listFiles();
+        List<String> filePaths = new ArrayList<String>();
+        for(File file:files){
+            filePaths.add(file.getAbsolutePath());
+        }
+        return filePaths;
+    }
+
     public List<Content> getContentFromAlbum(String albumName) throws Exception
     {
         Album album = albumRepository.findAlbumByTitle(albumName);
@@ -190,7 +356,7 @@ public class FileService {
     }
 
     public Album saveAlbum(Album album) throws RepositoryException, FileException {
-        String folderPath = "D:\\ServerFiles\\" + album.getAlbum_title();
+        String folderPath = createAlbumPath(album.getAlbum_title());
         Path newFolderPath = Paths.get(folderPath);
         try{
         Files.createDirectory(newFolderPath);}
@@ -210,7 +376,7 @@ public class FileService {
     public String createThumbnail(File fileToThumbnail, int width, int height) throws FileException {
 
         String thumbnailName = "thumbnail-"+fileToThumbnail.getName();
-        String thumbnailPath = "D:\\ServerFiles\\Thumbnails\\" +thumbnailName;
+        String thumbnailPath = createThumbnailPath(thumbnailName);
         Path pathToThumbnail = Paths.get(thumbnailPath);
         if(Files.exists(pathToThumbnail))
             return thumbnailPath;

@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+
 <html xmlns:th="http://www.thymeleaf.org">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <title>Admin Panel</title>
@@ -19,6 +21,14 @@
         display: flex;
         height: 100vh;
     }
+
+    .flex-container {
+        display: flex;          /* Enable flexbox layout */
+        align-items: center;    /* Align items vertically to the center */
+        justify-content: center;/* Align items horizontally to the center */
+    }
+
+
     .main-container {
         display: flex;
         height: 100vh;
@@ -78,14 +88,15 @@
 
 
     .image-item {
-        width: 120px; /* Set the desired width of each image tile */
-        height: 120px; /* Set the desired height of each image tile */
-         /* Add a small margin between images */
+        position: relative;
+        width: 120px;
+        height: 120px;
         border: 1px solid #ccc;
         border-radius: 5px;
-        /*overflow: hidden;*/
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin:5px;
+        overflow: hidden; /* Ensures content doesn't overflow */
+        margin: 5px;
+        display: flex; /* Enables responsive layout */
+        flex-direction: column; /* Stack content vertically */
     }
 
 
@@ -100,28 +111,47 @@
         object-fit: scale-down;
     }
 
+    .selection-indicator {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 21px;
+        height: 21px;
+        background-color: rgba(133, 133, 133, 0.8); /* Light grey and transparent */        /*border: 1px solid #007BFF;*/
+        border-radius: 50%;
+        opacity: 0; /* Initially hidden */
+    }
+
+
+
+    .selected .selection-indicator {
+        background-color: #007BFF; /* Darker blue when selected */
+        opacity: 1; /* Non-transparent when selected */
+    }
+
+    .image-item:not(.selected) .selection-indicator:hover{
+        background-color: rgba(217, 217, 217, 0.9); /* White and non-transparent */
+    }
+
+    .image-item:hover:not(.selected) .selection-indicator {
+        opacity: 1;
+    }
+
+
+
     .content-info-bar {
+        flex: 1; /* Take up remaining space after image */
         white-space: normal;
         padding: 5px;
-        background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+        background-color: rgba(250, 247, 247, 0.8); /* Semi-transparent white */
         text-align: center;
-        font-size: 8px;
-        width: 100%;
-        height: 30%;
+        font-size: 10px;
+        color: #333; /* Adjust text color */
+        /* Optional: adjust text color to match your design */
     }
 
 
-    .content-info-container {
-        flex: 20%;
-        padding: 20px;
-        background: linear-gradient(45deg, #f7f7f7, #e7e7e7);
-        overflow: hidden;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
 
-        box-sizing: border-box;
-        overflow-y: auto; /* Enable scrolling if content exceeds container height */
-    }
 
     form {
         margin-bottom: 20px;
@@ -139,6 +169,8 @@
         border-radius: 5px;
         cursor: pointer;
     }
+
+
 
     button:hover {
         background-color: #0056b3;
@@ -270,6 +302,15 @@
     }
 
 
+    .tick-mark {
+        color: #ffffff; /* Color of the tick mark */
+        font-size: 16px; /* Adjust the font size as needed */
+        line-height: 20px; /* Match the height of the .selection-indicator */
+        text-align: center;
+        display: block;
+        cursor: pointer;
+    }
+
 
     .images-sidebar-container-extended{
         flex: 85%;
@@ -291,14 +332,29 @@
 
 
     .selected {
-        border: 2px solid blue; /* Example styling for selected images */
+
     }
+
+
+    .content-info-container {
+        flex: 20%;
+        padding: 20px;
+        background: linear-gradient(45deg, #f7f7f7, #e7e7e7);
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+
+        box-sizing: border-box;
+        overflow-y: auto; /* Enable scrolling if content exceeds container height */
+    }
+
 
     .content-details {
         padding: 20px;
-        text-align: center;
+        text-align: left;
         background-color: #fff;
         border-top: 1px solid #ddd;
+        border-radius: 7px;
     }
 
     .content-details h2 {
@@ -310,6 +366,47 @@
         margin: 5px 0;
         color: #555;
     }
+
+    .loading-spinner {
+        display: none; /* Initially hidden */
+        width: 15px; /* Set width to 20px */
+        height: 15px; /* Set height to 20px */
+        position: absolute; /* Position absolutely within the container */
+        top: 50%; /* Center vertically */
+        left: 50%; /* Center horizontally */
+        transform: translate(-50%, -50%); /* Center precisely */
+        border: 2px solid #f3f3f3; /* Adjust border thickness */
+        border-radius: 50%;
+        border-top: 2px solid #3498db; /* Adjust border thickness */
+        -webkit-animation: spin 1s linear infinite;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /*.loading-text {*/
+    /*    display: none;*/
+    /*    font-size: 18px;  !* Adjust as needed *!*/
+    /*    font-weight: bold;*/
+    /*    overflow: hidden; !* Hide the extra dots initially *!*/
+    /*    white-space: nowrap;  !* Prevent wrapping *!*/
+    /*}*/
+
+    /*!* The actual animation *!*/
+    /*@keyframes loadingDots {*/
+    /*    0%   { width: 0; }*/
+    /*    33%  { width: 40%; }*/
+    /*    66%  { width: 70%; }*/
+    /*    100% { width: 100%; } !* Show all text  *!*/
+    /*}*/
+
+    /*.loading-text::after {*/
+    /*    content: "...";*/
+    /*    animation: loadingDots 1.5s infinite alternate; !* Customize speed *!*/
+    /*}*/
 
 
     .loading-circle {
@@ -389,6 +486,63 @@
     }
 
 
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #ffffff;
+        border: 1px solid #2196f3;
+        color: #212121;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        margin: 15% auto;
+        padding: 20px;
+        width: 50%; /* Adjust the width for a more square appearance */
+        max-width: 400px; /* Set a max-width to prevent it from becoming too wide */
+    }
+
+    .close {
+        border-radius: 50%;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .modal-button {
+        background-color: #2196f3;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+
+
+
+    }
+    .modal-button:hover{
+        background-color: #1976d2;
+
+    }
+
+
 </style>
 </head>
 <body>
@@ -413,12 +567,12 @@
                     <div class="toolbar-info-button-hidden" id="current-album-title"></div>
                 </div>
                 <div class="toolbar-button-section" id="toolbar-button-section">
-                    <form id="fileUploadForm" style="height: 1px">
-                        <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />
-                        <button type="button" class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</button>
-                    </form>
-                    <button class="toolbar-button" onclick="deleteSelected()">Delete</button>
-                    <button class="toolbar-button">Button 3</button>
+<!--                    <form id="fileUploadForm" style="height: 1px">-->
+<!--                        <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onchange="uploadFile()" />-->
+<!--                        <div class="toolbar-button" onclick="document.getElementById('fileInput').click()">Upload Files</div>-->
+<!--                    </form>-->
+<!--                    <div class="toolbar-button" onclick="deleteSelected()">Delete</div>-->
+<!--                    <div class="toolbar-button">Button 3</div>-->
                 </div>
             </div>
             <div class="container" id="image-content-info-container">
@@ -434,6 +588,8 @@
 
     </div>
 </div>
+
+
 
 <script>
     let currentUrl = "http://192.168.100.101:8080/";
@@ -467,6 +623,8 @@
     }
     document.addEventListener('DOMContentLoaded', function() {
 
+        changeToolbarForNoSelected();
+
         fetch(currentUrl+"adminPanel/connectedUser", {
             method: 'GET',
             headers: {
@@ -495,12 +653,6 @@
             threshold: 0.5
         };
 
-
-
-
-
-
-
         function handleIntersection(entries, observer){
             entries.forEach(entry => {
                 if(entry.isIntersecting){
@@ -528,6 +680,260 @@
         let hourMinuteSeconds = stringTime.substring(stringTime.indexOf("T")+1);
         let hourMinute = hourMinuteSeconds.substring(0, hourMinuteSeconds.indexOf(".")-3);
         return  hourMinute+" "+ date ;
+    }
+
+    // <div className="modal" id="downloadModal">
+    //     <div className="modal-content">
+    //         <span className="close" onClick="closeModal()">&times;</span>
+    //         <h2>Download Information</h2>
+    //         <p>Download Size: 10 MB</p>
+    //         <button onClick="downloadFile()">Download</button>
+    //     </div>
+    // </div>
+
+
+    function openDownloadModal() {
+        document.getElementById('downloadModal').style.display = 'block';
+    }
+
+    function closeDownloadModal() {
+        document.getElementById('downloadModal').style.display = 'none';
+    }
+
+    function openSelectedDownloadModal() {
+        document.getElementById('downloadSelectedModal').style.display = 'block';
+    }
+
+    function closeSelectedDownloadModal() {
+        document.getElementById('downloadSelectedModal').style.display = 'none';
+    }
+    const createDownloadModal = ()=>{
+        let downloadModal = document.createElement('div');
+        downloadModal.classList.add("modal");
+        downloadModal.setAttribute('id', 'downloadModal');
+        let modalContent = document.createElement('div');
+        modalContent.classList.add('modal-content');
+        modalContent.innerHTML='<span class="close" onClick="closeDownloadModal()">&times;</span>';
+        let title = document.createElement('h2');
+        title.setAttribute('id', 'title');
+        // title.innerHTML="Download " + currentAlbum.album_title;
+
+        let size = document.createElement('p');
+        size.setAttribute('id', 'size');
+        // size.innerHTML="Size: "+currentAlbum.album_size;
+
+        let downloadSectionContainer = document.createElement('div');
+        downloadSectionContainer.classList.add('flex-container');
+
+        // let downloadText = document.createElement('div');
+        // downloadText.classList.add('loading-text');
+        // downloadText.setAttribute('id', 'downloadText');
+        // downloadText.textContent = 'Downloading';
+
+        let downloadButton = document.createElement('div');
+        downloadButton.classList.add('modal-button');
+        downloadButton.addEventListener('click', downloadAlbum);
+        downloadButton.innerHTML='Download';
+        downloadButton.setAttribute('id', 'modalDownloadButton');
+
+
+
+        downloadSectionContainer.appendChild(downloadButton);
+        // downloadSectionContainer.appendChild(downloadText);
+
+        modalContent.appendChild(title);
+        modalContent.appendChild(size);
+        modalContent.appendChild(downloadSectionContainer);
+        downloadModal.appendChild(modalContent);
+        return downloadModal;
+    }
+
+    const calculateSelectedContentSize =()=>{
+        let imageItems = Array.from(document.getElementsByClassName("selected"));
+        let size = 0;
+
+        imageItems.forEach(imageItem=>{
+            currentAlbumData.forEach(content=>{
+                //console.log(content.fileId);
+                //console.log(imageItem.getAttribute("imageId"));
+                if(content.fileId == imageItem.getAttribute("imageId"))
+                {
+                    //console.log(content.fileSize);
+                    size = size + content.fileSize;
+                }
+            })
+        })
+        return size;
+    }
+
+
+    const changeDownloadModal = (modalId)=>{
+
+        let downloadModal = document.getElementById(modalId);
+        let modalTitle = downloadModal.querySelector('#title');
+        modalTitle.innerHTML = "Download " + currentAlbum.album_title;
+
+        let size = document.querySelector('#size');
+
+        size.innerHTML ="Size: "+processFileSize(currentAlbum.album_size);
+
+    }
+
+    const changeDownloadSelectedModal = (modalId)=>{
+        let downloadSelectedModal =document.getElementById(modalId);
+        if(downloadSelectedModal)
+        {
+            let size = downloadSelectedModal.querySelector('#downloadSize');
+            size.innerHTML = "Selection size: "+processFileSize(calculateSelectedContentSize())
+            let selectedNum = downloadSelectedModal.querySelector('#selectedNumber');
+            selectedNum.innerHTML="Selected number: " +document.getElementsByClassName("selected").length.toString();
+        }
+    }
+    const createDownloadSelectedModal = ()=>{
+        let downloadModal = document.createElement('div');
+        downloadModal.classList.add("modal");
+        downloadModal.setAttribute('id', 'downloadSelectedModal');
+        let modalContent = document.createElement('div');
+        modalContent.classList.add('modal-content');
+        modalContent.innerHTML=' <span class="close" onClick="closeSelectedDownloadModal()">&times;</span>';
+        let title = document.createElement('h2');
+        title.innerHTML="Download Selection";
+
+        let size = document.createElement('p');
+        size.setAttribute('id', 'downloadSize');
+
+        let selectedNum = document.createElement('p');
+        selectedNum.setAttribute('id', 'selectedNumber');
+        // size.innerHTML="Selection size: "+calculateSelectedContentSize()+" MB";
+
+        let downloadSectionContainer = document.createElement('div');
+        downloadSectionContainer.classList.add('flex-container');
+
+        // let downloadText = document.createElement('div');
+        // downloadText.classList.add('loading-text');
+        // downloadText.setAttribute('id', 'downloadText');
+        // downloadText.textContent = 'Downloading';
+
+        let downloadButton = document.createElement('div');
+        downloadButton.classList.add('modal-button');
+        downloadButton.addEventListener('click', downloadSelectedContent);
+        downloadButton.innerHTML='Download';
+        downloadButton.setAttribute('id', 'modalSelectedDownloadButton');
+
+
+
+        downloadSectionContainer.appendChild(downloadButton);
+        // downloadSectionContainer.appendChild(downloadText);
+
+        modalContent.appendChild(title);
+        modalContent.appendChild(size);
+        modalContent.appendChild(selectedNum);
+        modalContent.appendChild(downloadSectionContainer);
+        downloadModal.appendChild(modalContent);
+        return downloadModal;
+    }
+
+    const checkIfExists =(elementID)=>{
+        let elem = document.getElementById(elementID);
+        return elem!=null;
+    }
+
+
+    function handleAlbumDownloadClick()
+    {
+        if(!checkIfExists('downloadModal')) {
+            let downloadModal = createDownloadModal();
+            document.body.appendChild(downloadModal);
+        }
+        changeDownloadModal('downloadModal');
+        openDownloadModal();
+    }
+
+    function handleSelectedDownloadClick(){
+        if(!checkIfExists('downloadSelectedModal')){
+            let downloadModal = createDownloadSelectedModal();
+            document.body.appendChild(downloadModal);
+        }
+        changeDownloadSelectedModal('downloadSelectedModal');
+        openSelectedDownloadModal();
+    }
+
+
+    async function downloadAlbum() {
+        try {
+            let downloadButton = document.getElementById('modalDownloadButton');
+            downloadButton.innerHTML = "Downloading...";  // Corrected property name
+            downloadButton.style.pointerEvents = "none";
+            const response = await fetch(currentUrl +"adminPanel" + "/downloadZipAlbum?albumTitle=" + currentAlbum.album_title);
+            if (!response.ok)
+                throw new Error("Error fetching album ZIP");
+
+            const filename = currentAlbum.album_title + ".zip";
+            const fileBlob = await response.blob();
+
+
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(fileBlob);
+            downloadLink.download = filename;
+            downloadLink.style.display = 'none';
+
+
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+
+            URL.revokeObjectURL(downloadLink.href);
+            document.body.removeChild(downloadLink);
+            downloadButton.innerHTML='Download';
+            downloadButton.style.pointerEvents = "auto";
+
+        }
+        catch (error) {
+            console.error('Error downloading album:', error);
+            // Handle the error, e.g., display an error message to the user
+        }
+    }
+
+    async function downloadSelectedContent(){
+        let imageItems = Array.from(document.getElementsByClassName("selected"));
+        let imageItemsIds = [];
+        imageItems.forEach(imageItem=>{
+            let imageId = imageItem.getAttribute("imageId");
+            imageItemsIds.push(imageId);
+        })
+
+        let downloadButton = document.getElementById('modalSelectedDownloadButton');
+        downloadButton.innerHTML = "Downloading...";  // Corrected property name
+        downloadButton.style.pointerEvents = "none";
+        const response = await fetch(currentUrl +"adminPanel/downloadZipContent",{
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ contentIds: imageItemsIds }),
+        });
+        if(!response.ok){
+
+        }
+
+        const filename = "contentDownload.zip";
+        const fileBlob = await response.blob();
+
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(fileBlob);
+        downloadLink.download = filename;
+        downloadLink.style.display = 'none';
+
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+
+        URL.revokeObjectURL(downloadLink.href);
+        document.body.removeChild(downloadLink);
+        downloadButton.innerHTML='Download';
+        downloadButton.style.pointerEvents = "auto";
+
     }
 
     function deleteSelected() {
@@ -631,6 +1037,7 @@
 
         Promise.all(uploadPromises)
             .then(() => {
+
                 displayAlbumData(currentAlbum);
             })
             .catch(error => {
@@ -679,14 +1086,17 @@
     }
 
 
+
+
     function processFileSize(fileSize)
     {
         if(fileSize>1000)
         {
             fileSize= fileSize/1000;
-            return fileSize.toString() + " GB";
+            return fileSize.toFixed(2).toString() + " GB";
         }
-        return fileSize.toString()+" MB";
+
+        return fileSize.toFixed(2).toString()+" MB";
     }
 
     const createToolbarInfoButton = ()=>{
@@ -729,8 +1139,11 @@
 
 
             let downloadSelectedButton = createToolbarSelectionButton();
+
             downloadSelectedButton.innerHTML="Download";
             downloadSelectedButton.setAttribute('id','toolbar-download-selected-button');
+            downloadSelectedButton.addEventListener('click', handleSelectedDownloadClick);
+
             //to implement donwload selected button
 
             toolbarButtonSection.appendChild(deleteSelectedButton);
@@ -748,14 +1161,33 @@
     const changeToolbarButtonSectionForNoSelected =()=>{
         if(document.getElementById("toolbar-upload-button")==null) {
             let toolbarButtonSection = document.getElementById("toolbar-button-section");
-            toolbarButtonSection.innerHTML = '\n' +
-                '            <form id="fileUploadForm" style="height: 1px">\n' +
-                '                <input type="file" name="files[]" id="fileInput" multiple style="display: none;" onChange="uploadFile()" />\n' +
-                '                <button type="button" class="toolbar-button" onClick="document.getElementById(\'fileInput\').click()">Upload Files</button>\n' +
-                '            </form>';
 
-            // let uploadButton = createToolbarButton();
-            // uploadButton.setAttribute('id','toolbar-upload-button');
+
+            toolbarButtonSection.innerHTML = '';
+
+            var fileUploadForm = document.createElement('form');
+            fileUploadForm.id = 'fileUploadForm';
+            fileUploadForm.style.height = '1px';
+
+// Creating the input element
+            var fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.name = 'files[]';
+            fileInput.id = 'fileInput';
+            fileInput.multiple = true;
+            fileInput.style.display = 'none';
+            fileInput.addEventListener('change', uploadFile); // assuming uploadFile is a defined function
+
+
+            let uploadButton = createToolbarButton();
+            uploadButton.innerHTML='Upload'
+            uploadButton.setAttribute('id','toolbar-upload-button');
+            uploadButton.addEventListener('click', function () {
+                document.getElementById('fileInput').click();
+            });
+
+            fileUploadForm.appendChild(fileInput);
+            fileUploadForm.appendChild(uploadButton);
             // uploadButton.addEventListener('click', () => {
             //     document.getElementById('fileInput').click();
             // });
@@ -764,6 +1196,7 @@
 
             let downloadButton = createToolbarButton();
             downloadButton.setAttribute('id', "toolbar-download-button");
+            downloadButton.addEventListener('click', handleAlbumDownloadClick);
             //to implement download function
             downloadButton.innerHTML = "Download";
 
@@ -775,6 +1208,7 @@
             // toolbarButtonSection.appendChild(uploadButton);
             toolbarButtonSection.appendChild(downloadButton);
             toolbarButtonSection.appendChild(sortButton);
+            toolbarButtonSection.appendChild(fileUploadForm);
         }
     }
 
@@ -805,9 +1239,15 @@
             const imageItem = document.createElement('div');
             imageItem.setAttribute('imageId', content.fileId);
             imageItem.classList.add('image-item');
-            imageItem.addEventListener('click', function(){
-
+            // imageItem.classList.toggle('unselected');
+            let imgElement = createImageElement(content);
+            let infoBar = createInfoBar(content);
+            let selectionIndicator = document.createElement("div");
+            selectionIndicator.classList.add("selection-indicator");
+            selectionIndicator.innerHTML='<span class="tick-mark">✔</span>';
+            selectionIndicator.addEventListener('click', function(){
                 imageItem.classList.toggle("selected");
+                event.stopPropagation();
                 const selectedPhotos = document.querySelectorAll(".selected");
                 if(selectedPhotos.length>0)
                     changeToolbarForSelected(selectedPhotos);
@@ -816,9 +1256,8 @@
                 }
             })
 
-            let imgElement = createImageElement(content);
-            let infoBar = createInfoBar(content);
             imageItem.appendChild(imgElement);
+            imageItem.appendChild(selectionIndicator);
             imageItem.appendChild(infoBar);
             return imageItem;
         };
@@ -950,7 +1389,7 @@
         contents.forEach(content => {
             if (content.fileType === 'image') {
                 const imageItem = createImageItem(content);
-                imageItem.addEventListener('dblclick', function () {
+                imageItem.addEventListener('click', function () {
                     handleImageDbClick(content);
                 });
                 container.appendChild(imageItem);

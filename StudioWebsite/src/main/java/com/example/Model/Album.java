@@ -23,4 +23,7 @@ public class Album {
 
     @Column(insertable = false, name = "creation_date")
     private Date creation_date;
+
+    @Column(name="album_size")
+    private float album_size;
 }
